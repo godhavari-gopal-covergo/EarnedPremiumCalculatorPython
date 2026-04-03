@@ -1,0 +1,9 @@
+# Build artifacts
+bin/
+obj/
+
+# OS files
+.DS_Store
+
+# IDE
+.claude/
