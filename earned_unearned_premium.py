@@ -72,6 +72,13 @@ class Policy:
 
 
 @dataclass
+class LayerDetail:
+    label: str        # e.g. "Original", "Endorsement 1"
+    daily_rate: float
+    days: int
+    earned: float     # daily_rate * days (or remainder for last month)
+
+@dataclass
 class PeriodResult:
     period_start: date
     period_end: date
@@ -79,6 +86,7 @@ class PeriodResult:
     earned_current: float
     unearned: float
     total_paid: float
+    layer_details: List[LayerDetail] = field(default_factory=list)
     product_breakdown: dict = field(default_factory=dict)
 
 
@@ -88,15 +96,17 @@ def _build_layers(policy: Policy) -> list:
     end_excl = policy._end_exclusive(policy.end_date)
     days = max((end_excl - policy.start_date).days, 1)
     layers.append({
+        "label": "Original",
         "start": policy.start_date,
         "end_exclusive": end_excl,
         "premium": policy.total_premium,
         "daily": round(policy.total_premium / days, 2),
     })
-    for e in policy.endorsements:
+    for idx, e in enumerate(policy.endorsements):
         e_end_excl = e.end_date + timedelta(days=1) if e.end_date_inclusive else e.end_date
         e_days = max((e_end_excl - e.effective_date).days, 1)
         layers.append({
+            "label": f"Endorsement {idx+1}",
             "start": e.effective_date,
             "end_exclusive": e_end_excl,
             "premium": e.additional_premium,
@@ -119,6 +129,8 @@ def calculate_all_periods(policy: Policy) -> List[PeriodResult]:
     periods = generate_monthly_periods(policy.start_date, max_end_excl)
 
     cumulative_reported = 0.0
+    prev_layer_cumulative = {}
+    prev_layer_days = {}
     results = []
 
     for idx, (ps, pe) in enumerate(periods):
@@ -134,6 +146,7 @@ def calculate_all_periods(policy: Policy) -> List[PeriodResult]:
         # Only the excess beyond prior layers' premiums funds later layers.
         remaining_paid = paid_through
         total_cumulative_earned = 0.0
+        layer_cumulative_list = []
 
         for layer in layers:
             # How much of the paid pool is available to this layer
@@ -150,6 +163,7 @@ def calculate_all_periods(policy: Policy) -> List[PeriodResult]:
             layer_earned = min(layer_earned, layer["premium"])    # cap at layer total
             layer_earned = min(layer_earned, layer_available)     # cap at funded amount
             total_cumulative_earned += layer_earned
+            layer_cumulative_list.append((layer, days_through, layer_earned))
 
         total_cumulative_earned = round(total_cumulative_earned, 2)
 
@@ -161,6 +175,28 @@ def calculate_all_periods(policy: Policy) -> List[PeriodResult]:
 
         period_earned = max(period_earned, 0.0)
         unearned = round(paid_through - cumulative_reported - period_earned, 2)
+
+        # Build per-layer detail for this period (current period contribution)
+        layer_details = []
+        for layer, days_through, cum_earned in layer_cumulative_list:
+            prev_cum = prev_layer_cumulative.get(layer["label"], 0.0)
+            prev_days = prev_layer_days.get(layer["label"], 0)
+            layer_period_earned = round(cum_earned - prev_cum, 2)
+            # Effective days = days that produced this period's earned amount.
+            # When a layer was unfunded in prior periods, catch-up means
+            # the earned amount covers more days than just the current period.
+            if layer["daily"] > 0 and layer_period_earned > 0:
+                effective_days = round(layer_period_earned / layer["daily"])
+            else:
+                effective_days = days_through - prev_days
+            layer_details.append(LayerDetail(
+                label=layer["label"],
+                daily_rate=layer["daily"],
+                days=effective_days,
+                earned=layer_period_earned,
+            ))
+            prev_layer_cumulative[layer["label"]] = cum_earned
+            prev_layer_days[layer["label"]] = days_through
 
         # Product split (proportional to product premium / grand total)
         product_breakdown = {}
@@ -179,6 +215,7 @@ def calculate_all_periods(policy: Policy) -> List[PeriodResult]:
             earned_current=period_earned,
             unearned=unearned,
             total_paid=paid_through,
+            layer_details=layer_details,
             product_breakdown=product_breakdown,
         ))
 
@@ -214,18 +251,21 @@ def print_results(policy: Policy, results: List[PeriodResult]):
     print()
 
     # --- Policy summary table ---
-    print(f"  {'Policy Summary':^71}")
-    print(f"  {'─' * 71}")
-    print(f"  {'Layer':<16} {'Start':>12} {'End':>12} {'End Type':>10} {'Premium':>12} {'Daily':>9}")
-    print(f"  {'─' * 71}")
-    print(f"  {'Original':<16} {str(policy.start_date):>12} {str(policy.end_date):>12} {end_label:>10} {policy.total_premium:>12.2f} {layers[0]['daily']:>9.2f}")
+    w = 90
+    print(f"  {'Policy Summary':^{w}}")
+    print(f"  {'─' * w}")
+    print(f"  {'Layer':<16} {'Start':>12} {'End':>12} {'End Type':>10} {'Premium':>12} {'Days':>6} {'Daily':>9}")
+    print(f"  {'─' * w}")
+    orig_days = (layers[0]['end_exclusive'] - layers[0]['start']).days
+    print(f"  {'Original':<16} {str(policy.start_date):>12} {str(policy.end_date):>12} {end_label:>10} {policy.total_premium:>12.2f} {orig_days:>6} {layers[0]['daily']:>9.2f}")
     for i, e in enumerate(policy.endorsements):
         e_label = "inclusive" if e.end_date_inclusive else "exclusive"
-        print(f"  {'Endorsement '+str(i+1):<16} {str(e.effective_date):>12} {str(e.end_date):>12} {e_label:>10} {e.additional_premium:>12.2f} {layers[i+1]['daily']:>9.2f}")
+        e_days = (layers[i+1]['end_exclusive'] - layers[i+1]['start']).days
+        print(f"  {'Endorsement '+str(i+1):<16} {str(e.effective_date):>12} {str(e.end_date):>12} {e_label:>10} {e.additional_premium:>12.2f} {e_days:>6} {layers[i+1]['daily']:>9.2f}")
     if policy.endorsements:
-        print(f"  {'─' * 71}")
-        print(f"  {'Grand Total':<16} {'':>12} {'':>12} {'':>10} {policy.grand_total_premium:>12.2f} {'':>9}")
-    print(f"  {'─' * 71}")
+        print(f"  {'─' * w}")
+        print(f"  {'Grand Total':<16} {'':>12} {'':>12} {'':>10} {policy.grand_total_premium:>12.2f} {'':>6} {'':>9}")
+    print(f"  {'─' * w}")
     print()
 
     # --- Products ---
@@ -240,26 +280,74 @@ def print_results(policy: Policy, results: List[PeriodResult]):
 
     # --- Installments ---
     print(f"  {'Installments':^65}")
-    print(f"  {'─' * 65}")
+    print(f"  {'─' * 70}")
     print(f"  {'#':<4} {'Bill From':>12} {'Bill To':>12} {'Inclusive':>10} {'Amount':>12} {'Status':>11}")
-    print(f"  {'─' * 65}")
+    print(f"  {'─' * 70}")
     for idx, inst in enumerate(policy.installments, 1):
         incl = "Yes" if inst.bill_to_inclusive else "No"
         print(f"  {idx:<4} {str(inst.bill_from):>12} {str(inst.bill_to):>12} {incl:>10} {inst.amount:>12.2f} {inst.status:>11}")
-    print(f"  {'─' * 65}")
+    print(f"  {'─' * 70}")
     print()
 
     # --- Earned / Unearned table ---
-    header = f"  {'Period':<25} {'Paid':>10} {'EarnedPrior':>12} {'EarnedCurr':>12} {'Unearned':>12}"
+    # Collect unique layer labels across all periods for column headers
+    layer_labels = []
+    seen = set()
+    for r in results:
+        for ld in r.layer_details:
+            if ld.label not in seen:
+                layer_labels.append(ld.label)
+                seen.add(ld.label)
+
+    # Build dynamic layer columns: "rate x Nd" (13) + " = " (3) + earned (10) = 26 per layer
+    formula_w = 13   # e.g. "6.91 x 35d" right-aligned
+    earned_w = 10    # e.g. "112.00" right-aligned
+    sep = " = "
+    layer_col_width = formula_w + len(sep) + earned_w
+    base_width = 71
+    total_width = base_width + len(layer_labels) * (layer_col_width + 2)
+
+    header = (
+        f"  {'Period':<25} {'Paid':>10} {'EarnedPrior':>12} {'EarnedCurr':>12} {'Unearned':>12}"
+    )
+    for lbl in layer_labels:
+        header += f"  {lbl:^{layer_col_width}}"
     print(header)
-    print(f"  {'─' * 71}")
+    print(f"  {'─' * total_width}")
 
     for r in results:
-        print(
+        line = (
             f"  {str(r.period_start)+' - '+str(r.period_end):<25} "
             f"{r.total_paid:>10.2f} {r.earned_prior:>12.2f} "
             f"{r.earned_current:>12.2f} {r.unearned:>12.2f}"
         )
+        ld_map = {ld.label: ld for ld in r.layer_details}
+        for lbl in layer_labels:
+            ld = ld_map.get(lbl)
+            if ld and ld.earned != 0:
+                formula = f"{ld.daily_rate:.2f} x {ld.days}d"
+                line += f"  {formula:>{formula_w}}{sep}{ld.earned:>{earned_w}.2f}"
+            else:
+                line += f"  {'—':^{layer_col_width}}"
+        print(line)
+
+    # --- Total row ---
+    total_earned_curr = sum(r.earned_current for r in results)
+    last = results[-1]
+    total_line = (
+        f"  {'Total':<25} "
+        f"{last.total_paid:>10.2f} {'':>12} "
+        f"{total_earned_curr:>12.2f} {last.unearned:>12.2f}"
+    )
+    layer_totals = {}
+    for r in results:
+        for ld in r.layer_details:
+            layer_totals[ld.label] = layer_totals.get(ld.label, 0.0) + ld.earned
+    for lbl in layer_labels:
+        earned = f"{round(layer_totals.get(lbl, 0.0), 2):.2f}"
+        total_line += f"  {'':>{formula_w}}{' ':>{len(sep)}}{earned:>{earned_w}}"
+    print(f"  {'─' * total_width}")
+    print(total_line)
     print()
 
 
