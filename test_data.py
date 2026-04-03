@@ -83,7 +83,7 @@ SCENARIOS = {
                 end_date_inclusive=True,
                 endorsements=[
                     Endorsement(
-                        effective_date=date(2026, 2, 25),
+                        effective_date=date(2026, 2, 20),
                         end_date=date(2027, 2, 1),     # defaults to policy end_date
                         additional_premium=1095.24,
                         end_date_inclusive=True,         # inclusive, same as policy
@@ -93,7 +93,7 @@ SCENARIOS = {
                     # Original annual payment
                     Installment(date(2026, 2, 1), date(2027, 2, 2), 2529.36, "collected", bill_to_inclusive=False),
                     # Adhoc installment for MTA (bill_from = endorsement effective date)
-                    Installment(date(2026, 2, 25), date(2027, 2, 1), 1095.24, "collected", bill_to_inclusive=True),
+                    Installment(date(2026, 2, 20), date(2027, 2, 1), 1095.24, "collected", bill_to_inclusive=True),
                 ],
             ),
         ],
