@@ -90,6 +90,51 @@ class PeriodResult:
     product_breakdown: dict = field(default_factory=dict)
 
 
+@dataclass
+class SummaryLayerInfo:
+    label: str
+    start: date
+    end: date
+    end_type: str       # "inclusive" or "exclusive"
+    premium: float
+    days: int
+    daily: float
+
+
+@dataclass
+class ProductInfo:
+    name: str
+    premium: float
+    ratio: float
+
+
+@dataclass
+class InstallmentInfo:
+    index: int
+    bill_from: date
+    bill_to: date
+    inclusive: bool
+    amount: float
+    status: str
+
+
+@dataclass
+class PolicyResult:
+    policy_number: str
+    policy_id: str
+    summary_layers: List[SummaryLayerInfo]
+    has_endorsements: bool
+    grand_total_premium: float
+    products: List[ProductInfo]
+    installments: List[InstallmentInfo]
+    periods: List[PeriodResult]
+    layer_labels: List[str]
+    total_earned_current: float
+    final_total_paid: float
+    final_unearned: float
+    layer_totals: dict = field(default_factory=dict)
+
+
 def _build_layers(policy: Policy) -> list:
     """Build premium layers: original + endorsements."""
     layers = []
@@ -224,6 +269,76 @@ def calculate_all_periods(policy: Policy) -> List[PeriodResult]:
     return results
 
 
+def compute_policy_result(policy: Policy) -> PolicyResult:
+    """Pre-compute all business results for a policy into a single object."""
+    periods = calculate_all_periods(policy)
+    layers = _build_layers(policy)
+
+    summary_layers = []
+    for i, layer in enumerate(layers):
+        if i == 0:
+            end_type = "inclusive" if policy.end_date_inclusive else "exclusive"
+            end_dt = policy.end_date
+        else:
+            e = policy.endorsements[i - 1]
+            end_type = "inclusive" if e.end_date_inclusive else "exclusive"
+            end_dt = e.end_date
+        summary_layers.append(SummaryLayerInfo(
+            label=layer["label"],
+            start=layer["start"],
+            end=end_dt,
+            end_type=end_type,
+            premium=layer["premium"],
+            days=(layer["end_exclusive"] - layer["start"]).days,
+            daily=layer["daily"],
+        ))
+
+    products = [
+        ProductInfo(name=p.name, premium=p.premium,
+                    ratio=p.premium / policy.total_premium)
+        for p in policy.products
+    ]
+
+    installments = [
+        InstallmentInfo(index=idx, bill_from=inst.bill_from, bill_to=inst.bill_to,
+                        inclusive=inst.bill_to_inclusive, amount=inst.amount,
+                        status=inst.status)
+        for idx, inst in enumerate(policy.installments, 1)
+    ]
+
+    layer_labels = []
+    seen = set()
+    for r in periods:
+        for ld in r.layer_details:
+            if ld.label not in seen:
+                layer_labels.append(ld.label)
+                seen.add(ld.label)
+
+    total_earned_current = sum(r.earned_current for r in periods)
+    layer_totals: dict = {}
+    for r in periods:
+        for ld in r.layer_details:
+            layer_totals[ld.label] = layer_totals.get(ld.label, 0.0) + ld.earned
+
+    last = periods[-1] if periods else None
+
+    return PolicyResult(
+        policy_number=policy.policy_number,
+        policy_id=policy.policy_id,
+        summary_layers=summary_layers,
+        has_endorsements=bool(policy.endorsements),
+        grand_total_premium=policy.grand_total_premium,
+        products=products,
+        installments=installments,
+        periods=periods,
+        layer_labels=layer_labels,
+        total_earned_current=total_earned_current,
+        final_total_paid=last.total_paid if last else 0.0,
+        final_unearned=last.unearned if last else 0.0,
+        layer_totals=layer_totals,
+    )
+
+
 def generate_monthly_periods(start: date, end: date) -> List[tuple]:
     """Generate monthly [period_start, period_end) pairs covering the policy."""
     periods = []
@@ -239,15 +354,12 @@ def generate_monthly_periods(start: date, end: date) -> List[tuple]:
     return periods
 
 
-def print_results(policy: Policy, results: List[PeriodResult]):
-    """Print results in a tabular format for verification."""
-    layers = _build_layers(policy)
-    end_label = "inclusive" if policy.end_date_inclusive else "exclusive"
+def print_results(result: PolicyResult):
+    """Format and print a pre-computed PolicyResult. No business logic here."""
 
-    # --- Policy identity ---
     print()
-    print(f"  Policy Number : {policy.policy_number}")
-    print(f"  Policy ID     : {policy.policy_id}")
+    print(f"  Policy Number : {result.policy_number}")
+    print(f"  Policy ID     : {result.policy_id}")
     print()
 
     # --- Policy summary table ---
@@ -256,15 +368,11 @@ def print_results(policy: Policy, results: List[PeriodResult]):
     print(f"  {'─' * w}")
     print(f"  {'Layer':<16} {'Start':>12} {'End':>12} {'End Type':>10} {'Premium':>12} {'Days':>6} {'Daily':>9}")
     print(f"  {'─' * w}")
-    orig_days = (layers[0]['end_exclusive'] - layers[0]['start']).days
-    print(f"  {'Original':<16} {str(policy.start_date):>12} {str(policy.end_date):>12} {end_label:>10} {policy.total_premium:>12.2f} {orig_days:>6} {layers[0]['daily']:>9.2f}")
-    for i, e in enumerate(policy.endorsements):
-        e_label = "inclusive" if e.end_date_inclusive else "exclusive"
-        e_days = (layers[i+1]['end_exclusive'] - layers[i+1]['start']).days
-        print(f"  {'Endorsement '+str(i+1):<16} {str(e.effective_date):>12} {str(e.end_date):>12} {e_label:>10} {e.additional_premium:>12.2f} {e_days:>6} {layers[i+1]['daily']:>9.2f}")
-    if policy.endorsements:
+    for sl in result.summary_layers:
+        print(f"  {sl.label:<16} {str(sl.start):>12} {str(sl.end):>12} {sl.end_type:>10} {sl.premium:>12.2f} {sl.days:>6} {sl.daily:>9.2f}")
+    if result.has_endorsements:
         print(f"  {'─' * w}")
-        print(f"  {'Grand Total':<16} {'':>12} {'':>12} {'':>10} {policy.grand_total_premium:>12.2f} {'':>6} {'':>9}")
+        print(f"  {'Grand Total':<16} {'':>12} {'':>12} {'':>10} {result.grand_total_premium:>12.2f} {'':>6} {'':>9}")
     print(f"  {'─' * w}")
     print()
 
@@ -273,8 +381,8 @@ def print_results(policy: Policy, results: List[PeriodResult]):
     print(f"  {'─' * 45}")
     print(f"  {'Name':<25} {'Premium':>12} {'Ratio':>6}")
     print(f"  {'─' * 45}")
-    for p in policy.products:
-        print(f"  {p.name:<25} {p.premium:>12.2f} {p.premium/policy.total_premium:>6.1%}")
+    for p in result.products:
+        print(f"  {p.name:<25} {p.premium:>12.2f} {p.ratio:>6.1%}")
     print(f"  {'─' * 45}")
     print()
 
@@ -283,25 +391,16 @@ def print_results(policy: Policy, results: List[PeriodResult]):
     print(f"  {'─' * 70}")
     print(f"  {'#':<4} {'Bill From':>12} {'Bill To':>12} {'Inclusive':>10} {'Amount':>12} {'Status':>11}")
     print(f"  {'─' * 70}")
-    for idx, inst in enumerate(policy.installments, 1):
-        incl = "Yes" if inst.bill_to_inclusive else "No"
-        print(f"  {idx:<4} {str(inst.bill_from):>12} {str(inst.bill_to):>12} {incl:>10} {inst.amount:>12.2f} {inst.status:>11}")
+    for inst in result.installments:
+        incl = "Yes" if inst.inclusive else "No"
+        print(f"  {inst.index:<4} {str(inst.bill_from):>12} {str(inst.bill_to):>12} {incl:>10} {inst.amount:>12.2f} {inst.status:>11}")
     print(f"  {'─' * 70}")
     print()
 
     # --- Earned / Unearned table ---
-    # Collect unique layer labels across all periods for column headers
-    layer_labels = []
-    seen = set()
-    for r in results:
-        for ld in r.layer_details:
-            if ld.label not in seen:
-                layer_labels.append(ld.label)
-                seen.add(ld.label)
-
-    # Build dynamic layer columns: "rate x Nd" (13) + " = " (3) + earned (10) = 26 per layer
-    formula_w = 13   # e.g. "6.91 x 35d" right-aligned
-    earned_w = 10    # e.g. "112.00" right-aligned
+    layer_labels = result.layer_labels
+    formula_w = 13
+    earned_w = 10
     sep = " = "
     layer_col_width = formula_w + len(sep) + earned_w
     base_width = 71
@@ -315,7 +414,7 @@ def print_results(policy: Policy, results: List[PeriodResult]):
     print(header)
     print(f"  {'─' * total_width}")
 
-    for r in results:
+    for r in result.periods:
         line = (
             f"  {str(r.period_start)+' - '+str(r.period_end):<25} "
             f"{r.total_paid:>10.2f} {r.earned_prior:>12.2f} "
@@ -332,19 +431,13 @@ def print_results(policy: Policy, results: List[PeriodResult]):
         print(line)
 
     # --- Total row ---
-    total_earned_curr = sum(r.earned_current for r in results)
-    last = results[-1]
     total_line = (
         f"  {'Total':<25} "
-        f"{last.total_paid:>10.2f} {'':>12} "
-        f"{total_earned_curr:>12.2f} {last.unearned:>12.2f}"
+        f"{result.final_total_paid:>10.2f} {'':>12} "
+        f"{result.total_earned_current:>12.2f} {result.final_unearned:>12.2f}"
     )
-    layer_totals = {}
-    for r in results:
-        for ld in r.layer_details:
-            layer_totals[ld.label] = layer_totals.get(ld.label, 0.0) + ld.earned
     for lbl in layer_labels:
-        earned = f"{round(layer_totals.get(lbl, 0.0), 2):.2f}"
+        earned = f"{round(result.layer_totals.get(lbl, 0.0), 2):.2f}"
         total_line += f"  {'':>{formula_w}}{' ':>{len(sep)}}{earned:>{earned_w}}"
     print(f"  {'─' * total_width}")
     print(total_line)
@@ -359,8 +452,8 @@ def run_scenario(key: str, scenario: dict):
     for i, policy in enumerate(scenario["policies"]):
         if len(scenario["policies"]) > 1:
             print(f"\n--- Policy {i + 1} ---")
-        results = calculate_all_periods(policy)
-        print_results(policy, results)
+        result = compute_policy_result(policy)
+        print_results(result)
 
 
 if __name__ == "__main__":
