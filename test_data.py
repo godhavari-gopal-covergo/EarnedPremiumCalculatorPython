@@ -135,16 +135,6 @@ SCENARIOS = {
                 installments=[
                     Installment(date(2026, 2, 1), date(2026, 3, 1), D("210.78"), InstallmentStatus.COLLECTED, bill_to_inclusive=False, collected_date=date(2026, 3, 10)),
                     Installment(date(2026, 3, 1), date(2026, 4, 1), D("210.78"), InstallmentStatus.COLLECTED, bill_to_inclusive=False, collected_date=date(2026, 3, 15)),
-                    Installment(date(2026, 4, 1), date(2026, 5, 1), D("210.78"), InstallmentStatus.BILLED, bill_to_inclusive=False, collected_date=None),
-                    Installment(date(2026, 5, 1), date(2026, 6, 1), D("210.78"), InstallmentStatus.BILLED, bill_to_inclusive=False, collected_date=None),
-                    Installment(date(2026, 6, 1), date(2026, 7, 1), D("210.78"), InstallmentStatus.BILLED, bill_to_inclusive=False, collected_date=None),
-                    Installment(date(2026, 7, 1), date(2026, 8, 1), D("210.78"), InstallmentStatus.BILLED, bill_to_inclusive=False, collected_date=None),
-                    Installment(date(2026, 8, 1), date(2026, 9, 1), D("210.78"), InstallmentStatus.BILLED, bill_to_inclusive=False, collected_date=None),
-                    Installment(date(2026, 9, 1), date(2026, 10, 1), D("210.78"), InstallmentStatus.BILLED, bill_to_inclusive=False, collected_date=None),
-                    Installment(date(2026, 10, 1), date(2026, 11, 1), D("210.78"), InstallmentStatus.BILLED, bill_to_inclusive=False, collected_date=None),
-                    Installment(date(2026, 11, 1), date(2026, 12, 1), D("210.78"), InstallmentStatus.BILLED, bill_to_inclusive=False, collected_date=None),
-                    Installment(date(2026, 12, 1), date(2027, 1, 1), D("210.78"), InstallmentStatus.BILLED, bill_to_inclusive=False, collected_date=None),
-                    Installment(date(2027, 1, 1), date(2027, 2, 2), D("210.78"), InstallmentStatus.BILLED, bill_to_inclusive=False, collected_date=None),
                 ],
             ),
         ],
@@ -326,6 +316,76 @@ SCENARIOS = {
                         InstallmentStatus.COLLECTED,
                         bill_to_inclusive=False,
                         collected_date=date(2026, 3, 15),
+                    ),
+                ],
+            ),
+        ],
+    },
+
+    # -------------------------------------------------------------------------
+    # Phil.xlsx short-term: 1-Jan-2026 to 10-Apr-2026 (exclusive end); 1250; monthly
+    # -------------------------------------------------------------------------
+    "shortterm_monthly_phil_usecase1": {
+        "description": "Phil use case 1: Short term monthly — 550+350+350; collected 1-Jan, 1-Feb, 1-Mar",
+        "policies": [
+            Policy(
+                policy_number="POL-PHIL-001",
+                policy_id="phil-0001-0001-0001-000000000001",
+                start_date=date(2026, 1, 1),
+                end_date=date(2026, 4, 10),
+                total_premium=D("1250.00"),
+                end_date_inclusive=False,
+                installments=[
+                    Installment(
+                        date(2026, 1, 1),
+                        date(2026, 2, 1),
+                        D("550.00"),
+                        InstallmentStatus.COLLECTED,
+                        bill_to_inclusive=False,
+                        collected_date=date(2026, 1, 1),
+                    ),
+                    Installment(
+                        date(2026, 2, 1),
+                        date(2026, 3, 1),
+                        D("350.00"),
+                        InstallmentStatus.COLLECTED,
+                        bill_to_inclusive=False,
+                        collected_date=date(2026, 2, 1),
+                    ),
+                    Installment(
+                        date(2026, 3, 1),
+                        date(2026, 4, 1),
+                        D("350.00"),
+                        InstallmentStatus.COLLECTED,
+                        bill_to_inclusive=False,
+                        collected_date=date(2026, 3, 1),
+                    ),
+                ],
+            ),
+        ],
+    },
+
+    # -------------------------------------------------------------------------
+    # Phil.xlsx short-term: same term; single installment full premium
+    # -------------------------------------------------------------------------
+    "shortterm_annual_phil_usecase2": {
+        "description": "Phil use case 2: Short term annual — 1250 collected 1-Jan",
+        "policies": [
+            Policy(
+                policy_number="POL-PHIL-002",
+                policy_id="phil-0002-0002-0002-000000000002",
+                start_date=date(2026, 1, 1),
+                end_date=date(2026, 4, 10),
+                total_premium=D("1250.00"),
+                end_date_inclusive=False,
+                installments=[
+                    Installment(
+                        date(2026, 1, 1),
+                        date(2026, 4, 10),
+                        D("1250.00"),
+                        InstallmentStatus.COLLECTED,
+                        bill_to_inclusive=False,
+                        collected_date=date(2026, 1, 1),
                     ),
                 ],
             ),
