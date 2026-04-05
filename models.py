@@ -77,6 +77,7 @@ class PolicyPeriod:
     daily_rate: Decimal
     days: int
     earned: Decimal     # daily_rate * days (or remainder for last month)
+    formula: Optional[str] = None  # override display formula (e.g. for sweep / cap)
 
 
 @dataclass
