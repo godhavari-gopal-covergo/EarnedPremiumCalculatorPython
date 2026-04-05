@@ -136,13 +136,20 @@ def calculate_for_period(
         days_in_window = (eff_end_incl - eff_start).days + 1
         coverage_ends_this_period = (layer_end_incl <= reportingperiod_end)
 
+        sweep = False
         if is_last or coverage_ends_this_period:
             layer_accumulated = _layer_accumulated(layer, accumulated_earned, grand_total, layers)
             layer_earned = (layer["premium"] - layer_accumulated).quantize(TWO_PLACES)
             layer_earned = max(layer_earned, ZERO)
+            sweep = True
         else:
             layer_earned = (layer["daily"] * days_in_window).quantize(TWO_PLACES)
             layer_earned = min(layer_earned, layer["premium"])
+
+        if sweep:
+            formula = f"{layer['premium']:.2f} - {layer_accumulated:.2f}"
+        else:
+            formula = None
 
         period_earned += layer_earned
         policy_periods.append(PolicyPeriod(
@@ -150,17 +157,29 @@ def calculate_for_period(
             daily_rate=layer["daily"],
             days=days_in_window,
             earned=layer_earned,
+            formula=formula,
         ))
 
     period_earned = period_earned.quantize(TWO_PLACES)
     period_earned = max(period_earned, ZERO)
 
-    if period_earned > remaining_collectible and not is_last:
-        period_earned = ZERO
-        policy_periods = [
-            PolicyPeriod(label=pp.label, daily_rate=pp.daily_rate, days=0, earned=ZERO)
-            for pp in policy_periods
-        ]
+    if period_earned > remaining_collectible:
+        if is_last:
+            period_earned = max(remaining_collectible, ZERO)
+            policy_periods = [
+                PolicyPeriod(
+                    label=pp.label, daily_rate=pp.daily_rate, days=pp.days,
+                    earned=period_earned,
+                    formula=f"{paid_through:.2f} - {accumulated_earned:.2f}",
+                )
+                for pp in policy_periods
+            ]
+        else:
+            period_earned = ZERO
+            policy_periods = [
+                PolicyPeriod(label=pp.label, daily_rate=pp.daily_rate, days=0, earned=ZERO)
+                for pp in policy_periods
+            ]
 
     unearned = (grand_total - accumulated_earned - period_earned).quantize(TWO_PLACES)
 
@@ -338,13 +357,12 @@ def print_results(result: PolicyResult):
     sep = " = "
     pp_col_width = formula_w + len(sep) + earned_w
     base_width = 71
-    total_width = base_width + len(policy_period_labels) * (pp_col_width + 2)
+    total_width = base_width + (pp_col_width + 2)
 
     header = (
         f"  {'ReportingPeriod':<25} {'Paid':>10} {'EarnedPrior':>12} {'EarnedCurr':>12} {'Unearned':>12}"
     )
-    for lbl in policy_period_labels:
-        header += f"  {lbl:^{pp_col_width}}"
+    header += f"  {'Calculation':^{pp_col_width}}"
     print(header)
     print(f"  {'─' * total_width}")
 
@@ -354,14 +372,15 @@ def print_results(result: PolicyResult):
             f"{r.total_paid:>10.2f} {r.earned_prior:>12.2f} "
             f"{r.earned_current:>12.2f} {r.unearned:>12.2f}"
         )
-        pp_map = {pp.label: pp for pp in r.policy_periods}
-        for lbl in policy_period_labels:
-            pp = pp_map.get(lbl)
-            if pp and pp.earned != ZERO:
-                formula = f"{pp.daily_rate:.2f} x {pp.days}d"
-                line += f"  {formula:>{formula_w}}{sep}{pp.earned:>{earned_w}.2f}"
+        pp = r.policy_periods[0] if r.policy_periods else None
+        if pp and pp.earned != ZERO:
+            if pp.formula:
+                calc = pp.formula
             else:
-                line += f"  {'—':^{pp_col_width}}"
+                calc = f"{pp.daily_rate:.2f} x {pp.days}d"
+            line += f"  {calc:>{formula_w}}{sep}{pp.earned:>{earned_w}.2f}"
+        else:
+            line += f"  {'—':^{pp_col_width}}"
         print(line)
 
     # --- Total row ---
@@ -370,9 +389,8 @@ def print_results(result: PolicyResult):
         f"{result.final_total_paid:>10.2f} {'':>12} "
         f"{result.total_earned_current:>12.2f} {result.final_unearned:>12.2f}"
     )
-    for lbl in policy_period_labels:
-        earned = _fmt(result.policy_period_totals.get(lbl, ZERO).quantize(TWO_PLACES))
-        total_line += f"  {'':>{formula_w}}{' ':>{len(sep)}}{earned:>{earned_w}}"
+    total_calc = sum(result.policy_period_totals.values(), ZERO).quantize(TWO_PLACES)
+    total_line += f"  {'':>{formula_w}}{' ':>{len(sep)}}{_fmt(total_calc):>{earned_w}}"
     print(f"  {'─' * total_width}")
     print(total_line)
     print()
