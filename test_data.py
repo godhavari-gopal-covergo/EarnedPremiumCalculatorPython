@@ -5,7 +5,7 @@ Run with:  python earned_unearned_premium.py <scenario_key>
 """
 
 from datetime import date
-from earned_unearned_premium import Policy, Installment, Endorsement
+from models import Endorsement, Installment, InstallmentStatus, Policy
 
 
 SCENARIOS = {
@@ -22,9 +22,9 @@ SCENARIOS = {
                 total_premium=1250,
                 end_date_inclusive=False,
                 installments=[
-                    Installment(date(2026, 1, 1), date(2026, 2, 1), 550, "collected", bill_to_inclusive=False),
-                    Installment(date(2026, 2, 1), date(2026, 3, 1), 350, "collected", bill_to_inclusive=True),
-                    Installment(date(2026, 3, 1), date(2026, 4, 1), 350, "collected", bill_to_inclusive=True),
+                    Installment(date(2026, 1, 1), date(2026, 2, 1), 550, InstallmentStatus.COLLECTED, bill_to_inclusive=False),
+                    Installment(date(2026, 2, 1), date(2026, 3, 1), 350, InstallmentStatus.COLLECTED, bill_to_inclusive=True),
+                    Installment(date(2026, 3, 1), date(2026, 4, 1), 350, InstallmentStatus.COLLECTED, bill_to_inclusive=True),
                 ],
             ),
         ],
@@ -42,7 +42,7 @@ SCENARIOS = {
                 total_premium=1250,
                 end_date_inclusive=False,
                 installments=[
-                    Installment(date(2026, 1, 1), date(2026, 4, 10), 1250, "collected", bill_to_inclusive=False),
+                    Installment(date(2026, 1, 1), date(2026, 4, 10), 1250, InstallmentStatus.COLLECTED, bill_to_inclusive=False),
                 ],
             ),
         ],
@@ -60,7 +60,7 @@ SCENARIOS = {
                 total_premium=2529.36,
                 end_date_inclusive=True,
                 installments=[
-                    Installment(date(2026, 2, 1), date(2027, 2, 2), 2529.36, "collected", bill_to_inclusive=False),
+                    Installment(date(2026, 2, 1), date(2027, 2, 2), 2529.36, InstallmentStatus.COLLECTED, bill_to_inclusive=False),
                 ],
             ),
         ],
@@ -87,9 +87,9 @@ SCENARIOS = {
                 ],
                 installments=[
                     # Original annual payment
-                    Installment(date(2026, 2, 1), date(2027, 2, 2), 2529.36, "collected", bill_to_inclusive=False),
+                    Installment(date(2026, 2, 1), date(2027, 2, 2), 2529.36, InstallmentStatus.COLLECTED, bill_to_inclusive=False),
                     # Adhoc installment for MTA (bill_from = endorsement effective date)
-                    Installment(date(2026, 2, 20), date(2027, 2, 1), 1095.24, "collected", bill_to_inclusive=True),
+                    Installment(date(2026, 2, 20), date(2027, 2, 1), 1095.24, InstallmentStatus.COLLECTED, bill_to_inclusive=True),
                 ],
             ),
         ],
