@@ -12,7 +12,7 @@ Waterfall allocation: original layer claims paid first, endorsements get the res
 """
 
 from datetime import date, timedelta
-from typing import List
+from typing import Dict, List, Optional
 
 from models import (
     Endorsement,
@@ -52,100 +52,128 @@ def _build_layers(policy: Policy) -> list:
     return layers
 
 
+def calculate_for_period(
+    policy: Policy,
+    reportingperiod_start: date,
+    reportingperiod_end: date,
+    cumulative_reported: float = 0.0,
+    prev_policy_period_cumulative: Optional[Dict[str, float]] = None,
+    prev_policy_period_days: Optional[Dict[str, int]] = None,
+    is_last: bool = False,
+) -> ReportingPeriodResult:
+    """
+    Calculate earned/unearned for a single reporting period.
+    Both reportingperiod_start and reportingperiod_end are inclusive.
+
+    Chaining: pass the returned cumulative state into the next call
+    via cumulative_reported, prev_policy_period_cumulative, prev_policy_period_days.
+    """
+    if prev_policy_period_cumulative is None:
+        prev_policy_period_cumulative = {}
+    if prev_policy_period_days is None:
+        prev_policy_period_days = {}
+
+    layers = _build_layers(policy)
+    grand_total = sum(l["premium"] for l in layers)
+    pe_excl = reportingperiod_end + timedelta(days=1)
+
+    paid_through = sum(
+        i.amount for i in policy.installments
+        if i.status == InstallmentStatus.COLLECTED and i.bill_from <= reportingperiod_end
+    )
+
+    total_cumulative_earned = 0.0
+    layer_cumulative_list = []
+
+    for layer in layers:
+        if pe_excl <= layer["start"]:
+            days_through = 0
+        else:
+            days_through = max(0, (min(pe_excl, layer["end_exclusive"]) - layer["start"]).days)
+
+        layer_earned = round(layer["daily"] * days_through, 2)
+        if layer["premium"] >= 0:
+            layer_earned = min(layer_earned, layer["premium"])
+        else:
+            layer_earned = max(layer_earned, layer["premium"])
+        total_cumulative_earned += layer_earned
+        layer_cumulative_list.append((layer, days_through, layer_earned))
+
+    uncapped_cumulative = round(total_cumulative_earned, 2)
+    total_cumulative_earned = min(uncapped_cumulative, paid_through)
+
+    # Scale per-layer cumulative earned proportionally when capped by paid
+    if uncapped_cumulative > 0 and total_cumulative_earned < uncapped_cumulative:
+        scale = total_cumulative_earned / uncapped_cumulative
+        layer_cumulative_list = [
+            (layer, days, round(cum_e * scale, 2))
+            for layer, days, cum_e in layer_cumulative_list
+        ]
+
+    if is_last:
+        period_earned = round(grand_total - cumulative_reported, 2)
+        period_earned = min(period_earned, round(paid_through - cumulative_reported, 2))
+    else:
+        period_earned = round(total_cumulative_earned - cumulative_reported, 2)
+
+    period_earned = max(period_earned, 0.0)
+    unearned = round(grand_total - cumulative_reported - period_earned, 2)
+
+    policy_periods = []
+    for layer, days_through, cum_earned in layer_cumulative_list:
+        prev_cum = prev_policy_period_cumulative.get(layer["label"], 0.0)
+        prev_days = prev_policy_period_days.get(layer["label"], 0)
+        period_earned_component = round(cum_earned - prev_cum, 2)
+        if layer["daily"] > 0 and period_earned_component > 0:
+            effective_days = round(period_earned_component / layer["daily"])
+        else:
+            effective_days = days_through - prev_days
+        policy_periods.append(PolicyPeriod(
+            label=layer["label"],
+            daily_rate=layer["daily"],
+            days=effective_days,
+            earned=period_earned_component,
+        ))
+        prev_policy_period_cumulative[layer["label"]] = cum_earned
+        prev_policy_period_days[layer["label"]] = days_through
+
+    return ReportingPeriodResult(
+        reportingperiod_start=reportingperiod_start,
+        reportingperiod_end=reportingperiod_end,
+        earned_prior=round(cumulative_reported, 2),
+        earned_current=period_earned,
+        unearned=unearned,
+        total_paid=paid_through,
+        policy_periods=policy_periods,
+    )
+
+
 def calculate_all_periods(policy: Policy) -> List[ReportingPeriodResult]:
     """
     Calculate earned/unearned for all monthly periods across the policy term.
-    Handles endorsements via waterfall paid allocation and retro catch-up.
-    Applies last-month rule on overall total.
+    Auto-generates inclusive monthly periods and calls calculate_for_period() for each.
     """
-    layers = _build_layers(policy)
-    grand_total = sum(l["premium"] for l in layers)
-
-    # Determine the latest end date across all layers for period generation
-    max_end_excl = max(l["end_exclusive"] for l in layers)
+    max_end_excl = max(
+        l["end_exclusive"] for l in _build_layers(policy)
+    )
     periods = generate_monthly_periods(policy.start_date, max_end_excl)
 
     cumulative_reported = 0.0
-    prev_policy_period_cumulative = {}
-    prev_policy_period_days = {}
+    prev_pp_cumulative: dict = {}
+    prev_pp_days: dict = {}
     results = []
 
     for idx, (ps, pe) in enumerate(periods):
         is_last = (idx == len(periods) - 1)
-
-        # Total paid as of this period (collected installments with bill_from <= reportingperiod_start)
-        paid_through = sum(
-            i.amount for i in policy.installments
-            if i.status == InstallmentStatus.COLLECTED and i.bill_from <= ps
+        result = calculate_for_period(
+            policy, ps, pe,
+            cumulative_reported=cumulative_reported,
+            prev_policy_period_cumulative=prev_pp_cumulative,
+            prev_policy_period_days=prev_pp_days,
+            is_last=is_last,
         )
-
-        # Waterfall: each layer reserves its full premium from paid pool.
-        # Only the excess beyond prior layers' premiums funds later layers.
-        remaining_paid = paid_through
-        total_cumulative_earned = 0.0
-        layer_cumulative_list = []
-
-        for layer in layers:
-            # How much of the paid pool is available to this layer
-            layer_available = min(remaining_paid, layer["premium"])
-            remaining_paid = round(remaining_paid - layer_available, 2)
-
-            # Days from layer start through end of this period
-            if pe <= layer["start"]:
-                days_through = 0
-            else:
-                days_through = max(0, (min(pe, layer["end_exclusive"]) - layer["start"]).days)
-
-            layer_earned = round(layer["daily"] * days_through, 2)
-            layer_earned = min(layer_earned, layer["premium"])    # cap at layer total
-            layer_earned = min(layer_earned, layer_available)     # cap at funded amount
-            total_cumulative_earned += layer_earned
-            layer_cumulative_list.append((layer, days_through, layer_earned))
-
-        total_cumulative_earned = round(total_cumulative_earned, 2)
-
-        if is_last:
-            # Last month rule: earned = whatever remains to reach grand total (or paid limit)
-            period_earned = round(min(grand_total, paid_through) - cumulative_reported, 2)
-        else:
-            period_earned = round(total_cumulative_earned - cumulative_reported, 2)
-
-        period_earned = max(period_earned, 0.0)
-        unearned = round(paid_through - cumulative_reported - period_earned, 2)
-
-        # Build per premium-component breakdown for this reporting row
-        policy_periods = []
-        for layer, days_through, cum_earned in layer_cumulative_list:
-            prev_cum = prev_policy_period_cumulative.get(layer["label"], 0.0)
-            prev_days = prev_policy_period_days.get(layer["label"], 0)
-            period_earned_component = round(cum_earned - prev_cum, 2)
-            # Effective days = days that produced this period's earned amount.
-            # When a component was unfunded in prior periods, catch-up means
-            # the earned amount covers more days than just the current period.
-            if layer["daily"] > 0 and period_earned_component > 0:
-                effective_days = round(period_earned_component / layer["daily"])
-            else:
-                effective_days = days_through - prev_days
-            policy_periods.append(PolicyPeriod(
-                label=layer["label"],
-                daily_rate=layer["daily"],
-                days=effective_days,
-                earned=period_earned_component,
-            ))
-            prev_policy_period_cumulative[layer["label"]] = cum_earned
-            prev_policy_period_days[layer["label"]] = days_through
-
-        results.append(ReportingPeriodResult(
-            reportingperiod_start=ps,
-            reportingperiod_end=pe,
-            earned_prior=round(cumulative_reported, 2),
-            earned_current=period_earned,
-            unearned=unearned,
-            total_paid=paid_through,
-            policy_periods=policy_periods,
-        ))
-
-        cumulative_reported += period_earned
+        results.append(result)
+        cumulative_reported += result.earned_current
 
     return results
 
@@ -213,17 +241,17 @@ def compute_policy_result(policy: Policy) -> PolicyResult:
     )
 
 
-def generate_monthly_periods(start: date, end: date) -> List[tuple]:
-    """Generate monthly [reportingperiod_start, reportingperiod_end) pairs covering the policy."""
+def generate_monthly_periods(start: date, end_exclusive: date) -> List[tuple]:
+    """Generate monthly (start, end) pairs with both dates inclusive."""
     periods = []
     current = date(start.year, start.month, 1)
-    while current < end:
-        y, m = current.year, current.month
-        if m == 12:
-            next_month = date(y + 1, 1, 1)
+    while current < end_exclusive:
+        if current.month == 12:
+            next_month = date(current.year + 1, 1, 1)
         else:
-            next_month = date(y, m + 1, 1)
-        periods.append((current, next_month))
+            next_month = date(current.year, current.month + 1, 1)
+        last_day = next_month - timedelta(days=1)
+        periods.append((current, last_day))
         current = next_month
     return periods
 
@@ -271,7 +299,7 @@ def print_results(result: PolicyResult):
     total_width = base_width + len(policy_period_labels) * (pp_col_width + 2)
 
     header = (
-        f"  {'Period':<25} {'Paid':>10} {'EarnedPrior':>12} {'EarnedCurr':>12} {'Unearned':>12}"
+        f"  {'ReportingPeriod':<25} {'Paid':>10} {'EarnedPrior':>12} {'EarnedCurr':>12} {'Unearned':>12}"
     )
     for lbl in policy_period_labels:
         header += f"  {lbl:^{pp_col_width}}"
@@ -323,7 +351,16 @@ def run_scenario(key: str, scenario: dict):
 if __name__ == "__main__":
     import sys
     from test_data import SCENARIOS
+    
+    print(f"{'*' * 50}")
+    print(f"{'*' * 50}")
+    print()
+    print(f"  {'EXECUTING CALCULATOR....'}")
+    print()
+    print(f"{'*' * 50}")
+    print(f"{'*' * 50}")
 
+    
     keys = list(SCENARIOS.keys())
 
     if len(sys.argv) > 1:
