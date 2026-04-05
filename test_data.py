@@ -5,14 +5,14 @@ Run with:  python earned_unearned_premium.py <scenario_key>
 """
 
 from datetime import date
-from earned_unearned_premium import Policy, Product, Installment, Endorsement
+from earned_unearned_premium import Policy, Installment, Endorsement
 
 
 SCENARIOS = {
 
     # -------------------------------------------------------------------------
     "excel_monthly": {
-        "description": "Excel example: 3 monthly installments, 2 products",
+        "description": "Excel example: 3 monthly installments",
         "policies": [
             Policy(
                 policy_number="POL-0001",
@@ -20,7 +20,6 @@ SCENARIOS = {
                 start_date=date(2026, 1, 1),
                 end_date=date(2026, 4, 10),
                 total_premium=1250,
-                products=[Product("Product A", 850), Product("Product B", 400)],
                 end_date_inclusive=False,
                 installments=[
                     Installment(date(2026, 1, 1), date(2026, 2, 1), 550, "collected", bill_to_inclusive=False),
@@ -41,7 +40,6 @@ SCENARIOS = {
                 start_date=date(2026, 1, 1),
                 end_date=date(2026, 4, 10),
                 total_premium=1250,
-                products=[Product("Product A", 850), Product("Product B", 400)],
                 end_date_inclusive=False,
                 installments=[
                     Installment(date(2026, 1, 1), date(2026, 4, 10), 1250, "collected", bill_to_inclusive=False),
@@ -60,7 +58,6 @@ SCENARIOS = {
                 start_date=date(2026, 2, 1),
                 end_date=date(2027, 2, 1),
                 total_premium=2529.36,
-                products=[Product("Health", 2529.36)],
                 end_date_inclusive=True,
                 installments=[
                     Installment(date(2026, 2, 1), date(2027, 2, 2), 2529.36, "collected", bill_to_inclusive=False),
@@ -79,7 +76,6 @@ SCENARIOS = {
                 start_date=date(2026, 2, 1),
                 end_date=date(2027, 2, 1),
                 total_premium=2529.36,
-                products=[Product("Health", 2529.36)],
                 end_date_inclusive=True,
                 endorsements=[
                     Endorsement(

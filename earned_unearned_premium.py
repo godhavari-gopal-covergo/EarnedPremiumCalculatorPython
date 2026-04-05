@@ -26,12 +26,6 @@ class Installment:
 
 
 @dataclass
-class Product:
-    name: str
-    premium: float
-
-
-@dataclass
 class Endorsement:
     effective_date: date      # when coverage change starts
     end_date: date            # end of coverage for this layer
@@ -46,7 +40,6 @@ class Policy:
     start_date: date
     end_date: date
     total_premium: float
-    products: List[Product]
     installments: List[Installment]
     end_date_inclusive: bool = True
     endorsements: List[Endorsement] = field(default_factory=list)
@@ -87,7 +80,6 @@ class PeriodResult:
     unearned: float
     total_paid: float
     layer_details: List[LayerDetail] = field(default_factory=list)
-    product_breakdown: dict = field(default_factory=dict)
 
 
 @dataclass
@@ -99,13 +91,6 @@ class SummaryLayerInfo:
     premium: float
     days: int
     daily: float
-
-
-@dataclass
-class ProductInfo:
-    name: str
-    premium: float
-    ratio: float
 
 
 @dataclass
@@ -125,7 +110,6 @@ class PolicyResult:
     summary_layers: List[SummaryLayerInfo]
     has_endorsements: bool
     grand_total_premium: float
-    products: List[ProductInfo]
     installments: List[InstallmentInfo]
     periods: List[PeriodResult]
     layer_labels: List[str]
@@ -243,16 +227,6 @@ def calculate_all_periods(policy: Policy) -> List[PeriodResult]:
             prev_layer_cumulative[layer["label"]] = cum_earned
             prev_layer_days[layer["label"]] = days_through
 
-        # Product split (proportional to product premium / grand total)
-        product_breakdown = {}
-        for p in policy.products:
-            ratio = p.premium / policy.total_premium  # ratio within original products
-            product_breakdown[p.name] = {
-                "earned_prior": round(cumulative_reported * ratio, 2),
-                "earned_current": round(period_earned * ratio, 2),
-                "unearned": round(unearned * ratio, 2),
-            }
-
         results.append(PeriodResult(
             period_start=ps,
             period_end=pe,
@@ -261,7 +235,6 @@ def calculate_all_periods(policy: Policy) -> List[PeriodResult]:
             unearned=unearned,
             total_paid=paid_through,
             layer_details=layer_details,
-            product_breakdown=product_breakdown,
         ))
 
         cumulative_reported += period_earned
@@ -293,12 +266,6 @@ def compute_policy_result(policy: Policy) -> PolicyResult:
             daily=layer["daily"],
         ))
 
-    products = [
-        ProductInfo(name=p.name, premium=p.premium,
-                    ratio=p.premium / policy.total_premium)
-        for p in policy.products
-    ]
-
     installments = [
         InstallmentInfo(index=idx, bill_from=inst.bill_from, bill_to=inst.bill_to,
                         inclusive=inst.bill_to_inclusive, amount=inst.amount,
@@ -328,7 +295,6 @@ def compute_policy_result(policy: Policy) -> PolicyResult:
         summary_layers=summary_layers,
         has_endorsements=bool(policy.endorsements),
         grand_total_premium=policy.grand_total_premium,
-        products=products,
         installments=installments,
         periods=periods,
         layer_labels=layer_labels,
@@ -374,16 +340,6 @@ def print_results(result: PolicyResult):
         print(f"  {'─' * w}")
         print(f"  {'Grand Total':<16} {'':>12} {'':>12} {'':>10} {result.grand_total_premium:>12.2f} {'':>6} {'':>9}")
     print(f"  {'─' * w}")
-    print()
-
-    # --- Products ---
-    print(f"  {'Products':^45}")
-    print(f"  {'─' * 45}")
-    print(f"  {'Name':<25} {'Premium':>12} {'Ratio':>6}")
-    print(f"  {'─' * 45}")
-    for p in result.products:
-        print(f"  {p.name:<25} {p.premium:>12.2f} {p.ratio:>6.1%}")
-    print(f"  {'─' * 45}")
     print()
 
     # --- Installments ---
