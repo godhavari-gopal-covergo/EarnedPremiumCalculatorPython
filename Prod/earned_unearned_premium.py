@@ -89,8 +89,8 @@ def process_policy(
         reportingperiod_start=report_month,
         reportingperiod_end=_reporting_period_end(report_month),
         earned=q2(current.earned + adj_earned),
-        unearned_paid_basis=q2(current.unearned_paid_basis + adj_unearned_paid_basis),
-        unearned_written_basis=q2(current.unearned_written_basis + adj_unearned_written_basis),
+        unearned_paid_basis=q2(current.unearned_paid_basis),
+        unearned_written_basis=q2(current.unearned_written_basis),
         collected_amount=current.collected_amount,
         adjustment_earned=adj_earned,
         adjustment_unearned_paid_basis=adj_unearned_paid_basis,
@@ -254,11 +254,20 @@ def build_policy_report_lines(
         lines.append(
             f"  {'ReportingPeriod':<27} {'Earned Delta':>14} {'Unearned Paid Delta':>20} {'Unearned Written Delta':>24}"
         )
+        total_earned_delta = ZERO
+        total_unearned_paid_delta = ZERO
+        total_unearned_written_delta = ZERO
         for month in sorted(month_deltas.keys()):
             e, up, uw = month_deltas[month]
+            total_earned_delta = q2(total_earned_delta + e)
+            total_unearned_paid_delta = q2(total_unearned_paid_delta + up)
+            total_unearned_written_delta = q2(total_unearned_written_delta + uw)
             lines.append(
                 f"  {_reporting_period_label(month):<27} {_fmt_money(e):>14} {_fmt_money(up):>20} {_fmt_money(uw):>24}"
             )
+        lines.append(
+            f"  {'Total':<27} {_fmt_money(total_earned_delta):>14} {_fmt_money(total_unearned_paid_delta):>20} {_fmt_money(total_unearned_written_delta):>24}"
+        )
     else:
         lines.append("  (none)")
 

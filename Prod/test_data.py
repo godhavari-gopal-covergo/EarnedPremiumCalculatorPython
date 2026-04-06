@@ -545,6 +545,84 @@ SCENARIOS = {
             ),
         ],
     },
+    "backdated_flat_cancellation_refund": {
+        "description": (
+            "Flat cancellation from policy start recorded in April with refund processed immediately. Closed months remain immutable; delta posts in April."
+        ),
+        "inputs": [
+            PolicyRunInput(
+                policy=PolicyInput(
+                    policy_id="P-BACK-FLAT-CAN-001",
+                    policy_number="POL-BACK-FLAT-CAN-001",
+                    start_date=date(2026, 1, 1),
+                    end_date=date(2026, 12, 31),
+                    end_date_inclusive=True,
+                    events=[
+                        PolicyEvent(
+                            event_id="E-ISSUE-1",
+                            event_type=EventType.ISSUE,
+                            effective_date=date(2026, 1, 1),
+                            end_date=date(2026, 12, 31),
+                            premium_delta=D("1200.00"),
+                            transaction_date=date(2026, 1, 1),
+                        ),
+                        PolicyEvent(
+                            event_id="E-CANCEL-FLAT-1",
+                            event_type=EventType.CANCEL,
+                            effective_date=date(2026, 1, 1),
+                            end_date=date(2026, 12, 31),
+                            premium_delta=D("-1200.00"),
+                            transaction_date=date(2026, 4, 2),
+                        ),
+                    ],
+                    installments=[
+                        Installment(
+                            bill_from=date(2026, 1, 1),
+                            bill_to_exclusive=date(2026, 2, 1),
+                            amount=D("100.00"),
+                            status=InstallmentStatus.COLLECTED,
+                            collected_date=date(2026, 1, 5),
+                        ),
+                        Installment(
+                            bill_from=date(2026, 2, 1),
+                            bill_to_exclusive=date(2026, 3, 1),
+                            amount=D("100.00"),
+                            status=InstallmentStatus.COLLECTED,
+                            collected_date=date(2026, 2, 5),
+                        ),
+                        Installment(
+                            bill_from=date(2026, 3, 1),
+                            bill_to_exclusive=date(2026, 4, 1),
+                            amount=D("100.00"),
+                            status=InstallmentStatus.COLLECTED,
+                            collected_date=date(2026, 3, 5),
+                        ),
+                        Installment(
+                            bill_from=date(2026, 4, 1),
+                            bill_to_exclusive=date(2026, 5, 1),
+                            amount=D("100.00"),
+                            status=InstallmentStatus.COLLECTED,
+                            collected_date=date(2026, 4, 5),
+                        ),
+                        Installment(
+                            bill_from=date(2026, 4, 1),
+                            bill_to_exclusive=date(2026, 5, 1),
+                            amount=D("-400.00"),
+                            status=InstallmentStatus.COLLECTED,
+                            collected_date=date(2026, 4, 6),
+                        ),
+                    ],
+                ),
+                report_month=date(2026, 4, 1),
+                prior_postings=[
+                    seeded_posting("P-BACK-FLAT-CAN-001", date(2026, 1, 1), date(2026, 1, 31), "100.00", "1100.00", "0.00"),
+                    seeded_posting("P-BACK-FLAT-CAN-001", date(2026, 2, 1), date(2026, 2, 28), "94.11", "1005.89", "5.89"),
+                    seeded_posting("P-BACK-FLAT-CAN-001", date(2026, 3, 1), date(2026, 3, 31), "101.99", "903.90", "3.90"),
+                ],
+                include_persisted_history=False,
+            ),
+        ],
+    },
     "future_mta_increase_no_adjustment": {
         "description": "Future-dated MTA from July should not trigger closed month adjustments in April run.",
         "inputs": [
