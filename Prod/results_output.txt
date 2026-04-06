@@ -307,10 +307,11 @@ Month truth (as-of report run):
 Closed month deltas posted forward:
   ReportingPeriod               Earned Delta  Unearned Paid Delta   Unearned Written Delta
   01-Feb-2026 to 28-Feb-2026           12.80               -12.80                  1082.44
+  Total                                12.80               -12.80                  1082.44
 
 Posted row for report month:
   ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written)  Collected   Adj(Earned)  Adj(UnearnedPaid)   Adj(UnearnedWritten)            Source
-  01-Mar-2026 to 31-Mar-2026      326.21        3092.11            4187.35    1095.24         12.80             -12.80                1082.44   BASE+ADJUSTMENT
+  01-Mar-2026 to 31-Mar-2026      326.21        3104.91            3104.91    1095.24         12.80             -12.80                1082.44   BASE+ADJUSTMENT
 
 ***********************************************************************************************
 Scenario Context
@@ -443,10 +444,11 @@ Closed month deltas posted forward:
   ReportingPeriod               Earned Delta  Unearned Paid Delta   Unearned Written Delta
   01-Feb-2026 to 28-Feb-2026            5.89                -5.89                   594.11
   01-Mar-2026 to 31-Mar-2026           -1.99                -3.90                   596.10
+  Total                                 3.90                -9.79                  1190.21
 
 Posted row for report month:
   ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written)  Collected   Adj(Earned)  Adj(UnearnedPaid)   Adj(UnearnedWritten)            Source
-  01-Apr-2026 to 30-Apr-2026      258.90          35.21            2435.21     300.00          3.90              -9.79                1190.21   BASE+ADJUSTMENT
+  01-Apr-2026 to 30-Apr-2026      258.90          45.00            1245.00     300.00          3.90              -9.79                1190.21   BASE+ADJUSTMENT
 
 ***********************************************************************************************
 Scenario Context
@@ -506,10 +508,79 @@ Closed month deltas posted forward:
   ReportingPeriod               Earned Delta  Unearned Paid Delta   Unearned Written Delta
   01-Feb-2026 to 28-Feb-2026          -30.66                30.66                  -669.34
   01-Mar-2026 to 31-Mar-2026          -67.89                -1.45                  -601.45
+  Total                               -98.55                29.21                 -1270.79
 
 Posted row for report month:
   ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written)  Collected   Adj(Earned)  Adj(UnearnedPaid)   Adj(UnearnedWritten)            Source
-  01-Apr-2026 to 30-Apr-2026      -96.10          29.21            -970.79       0.00        -98.55              29.21               -1270.79   BASE+ADJUSTMENT
+  01-Apr-2026 to 30-Apr-2026      -96.10           0.00             300.00       0.00        -98.55              29.21               -1270.79   BASE+ADJUSTMENT
+
+***********************************************************************************************
+Scenario Context
+-----------------------------------------------------------------------------------------------
+Scenario Name : backdated_flat_cancellation_refund
+Description   : Flat cancellation from policy start recorded in April with refund processed immediately. Closed months remain immutable; delta posts in April.
+***********************************************************************************************
+Policy Context
+-----------------------------------------------------------------------------------------------
+Policy Number : POL-BACK-FLAT-CAN-001
+Policy ID     : P-BACK-FLAT-CAN-001
+Coverage      : 2026-01-01 -> 2026-12-31
+Report Month  : 2026-04
+***********************************************************************************************
+
+Policy events (source timeline):
+  #  Type      Effective    End(excl)    Txn Date     Premium Delta
+  1  ISSUE     2026-01-01   2026-12-31   2026-01-01         1200.00
+  2  CANCEL    2026-01-01   2026-12-31   2026-04-02        -1200.00
+
+Derived premium slices (as-of report month):
+  #  Event ID       Type      Start        End(excl)       Premium      Days  DailyRate
+  1  E-CANCEL-FLAT-1 CANCEL    2026-01-01   2027-01-01     -1200.00       365      -3.29
+  2  E-ISSUE-1      ISSUE     2026-01-01   2027-01-01      1200.00       365       3.29
+                                                    Total           0.00
+
+Installments (collection schedule):
+  #  Bill From    Bill To(excl)     Amount Status       Collected Date
+  1  2026-01-01   2026-02-01       100.00 COLLECTED    2026-01-05  
+  2  2026-02-01   2026-03-01       100.00 COLLECTED    2026-02-05  
+  3  2026-03-01   2026-04-01       100.00 COLLECTED    2026-03-05  
+  4  2026-04-01   2026-05-01       100.00 COLLECTED    2026-04-05  
+  5  2026-04-01   2026-05-01      -400.00 COLLECTED    2026-04-06  
+                  Total              0.00                          
+
+Prior postings (from database)
+  ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written) Source     Run ID        
+  01-Jan-2026 to 31-Jan-2026      100.00           0.00            1100.00 SEED       seed-history  
+  01-Feb-2026 to 28-Feb-2026       94.11           5.89            1005.89 SEED       seed-history  
+  01-Mar-2026 to 31-Mar-2026      101.99           3.90             903.90 SEED       seed-history  
+  Total                           296.10                                                            
+
+Month truth (as-of report run):
+  ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written)  Collected
+  01-Jan-2026 to 31-Jan-2026        0.00         100.00               0.00     100.00
+  01-Feb-2026 to 28-Feb-2026        0.00         200.00               0.00     100.00
+  01-Mar-2026 to 31-Mar-2026        0.00         300.00               0.00     100.00
+  01-Apr-2026 to 30-Apr-2026        0.00           0.00               0.00    -300.00
+  01-May-2026 to 31-May-2026        0.00           0.00               0.00       0.00
+  01-Jun-2026 to 30-Jun-2026        0.00           0.00               0.00       0.00
+  01-Jul-2026 to 31-Jul-2026        0.00           0.00               0.00       0.00
+  01-Aug-2026 to 31-Aug-2026        0.00           0.00               0.00       0.00
+  01-Sep-2026 to 30-Sep-2026        0.00           0.00               0.00       0.00
+  01-Oct-2026 to 31-Oct-2026        0.00           0.00               0.00       0.00
+  01-Nov-2026 to 30-Nov-2026        0.00           0.00               0.00       0.00
+  01-Dec-2026 to 31-Dec-2026        0.00           0.00               0.00       0.00
+  Total                             0.00                                         0.00
+
+Closed month deltas posted forward:
+  ReportingPeriod               Earned Delta  Unearned Paid Delta   Unearned Written Delta
+  01-Jan-2026 to 31-Jan-2026         -100.00               100.00                 -1100.00
+  01-Feb-2026 to 28-Feb-2026          -94.11               194.11                 -1005.89
+  01-Mar-2026 to 31-Mar-2026         -101.99               296.10                  -903.90
+  Total                              -296.10               590.21                 -3009.79
+
+Posted row for report month:
+  ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written)  Collected   Adj(Earned)  Adj(UnearnedPaid)   Adj(UnearnedWritten)            Source
+  01-Apr-2026 to 30-Apr-2026     -296.10           0.00               0.00    -300.00       -296.10             590.21               -3009.79   BASE+ADJUSTMENT
 
 ***********************************************************************************************
 Scenario Context
