@@ -7,3 +7,6 @@ obj/
 
 # IDE
 .claude/
+
+# Python tests
+Prod/tests/
