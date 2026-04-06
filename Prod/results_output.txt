@@ -1,0 +1,551 @@
+***********************************************************************************************
+Scenario Context
+-----------------------------------------------------------------------------------------------
+Scenario Name : shortterm_monthly_phil_scenario
+Description   : Phil short-term monthly-pay scenario: policy 1-Jan-2026 to 10-Apr-2026, premium 1250.00 with payments 550/350/350 in Jan/Feb/Mar.
+***********************************************************************************************
+Policy Context
+-----------------------------------------------------------------------------------------------
+Policy Number : POL-PHIL-MONTHLY-001
+Policy ID     : MOCK-SHORTTERM-MONTHLY-PHIL-001
+Coverage      : 2026-01-01 -> 2026-04-10
+Report Month  : 2026-03
+***********************************************************************************************
+
+Policy events (source timeline):
+  #  Type      Effective    End(excl)    Txn Date     Premium Delta
+  1  ISSUE     2026-01-01   2026-04-10   2026-01-01         1250.00
+
+Derived premium slices (as-of report month):
+  #  Event ID       Type      Start        End(excl)       Premium      Days  DailyRate
+  1  E-ISSUE-PHIL-MONTHLY-1 ISSUE     2026-01-01   2026-04-10      1250.00        99      12.63
+                                                    Total        1250.00
+
+Installments (collection schedule):
+  #  Bill From    Bill To(excl)     Amount Status       Collected Date
+  1  2026-01-01   2026-02-01       550.00 COLLECTED    2026-01-01  
+  2  2026-02-01   2026-03-01       350.00 COLLECTED    2026-02-01  
+  3  2026-03-01   2026-04-01       350.00 COLLECTED    2026-03-01  
+  (none)
+
+Month truth (as-of report run):
+  ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written)  Collected
+  01-Jan-2026 to 31-Jan-2026      391.53         158.47             858.47     550.00
+  01-Feb-2026 to 28-Feb-2026      353.64         154.83             504.83     350.00
+  01-Mar-2026 to 31-Mar-2026      391.53         113.30             113.30     350.00
+  01-Apr-2026 to 30-Apr-2026      113.30           0.00               0.00       0.00
+
+Closed month deltas posted forward:
+  (none)
+
+Posted row for report month:
+  ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written)  Collected   Adj(Earned)  Adj(UnearnedPaid)   Adj(UnearnedWritten)            Source
+  01-Mar-2026 to 31-Mar-2026      391.53         113.30             113.30     350.00          0.00               0.00                   0.00              BASE
+
+***********************************************************************************************
+Scenario Context
+-----------------------------------------------------------------------------------------------
+Scenario Name : shortterm_fullpay_phil_scenario
+Description   : Phil short-term full-pay scenario: policy 1-Jan-2026 to 10-Apr-2026, premium 1250.00 fully paid.
+***********************************************************************************************
+Policy Context
+-----------------------------------------------------------------------------------------------
+Policy Number : POL-PHIL-FULLPAY-001
+Policy ID     : MOCK-SHORTTERM-FULLPAY-PHIL-001
+Coverage      : 2026-01-01 -> 2026-04-10
+Report Month  : 2026-01
+***********************************************************************************************
+
+Policy events (source timeline):
+  #  Type      Effective    End(excl)    Txn Date     Premium Delta
+  1  ISSUE     2026-01-01   2026-04-10   2026-01-01         1250.00
+
+Derived premium slices (as-of report month):
+  #  Event ID       Type      Start        End(excl)       Premium      Days  DailyRate
+  1  E-ISSUE-PHIL-1 ISSUE     2026-01-01   2026-04-10      1250.00        99      12.63
+                                                    Total        1250.00
+
+Installments (collection schedule):
+  #  Bill From    Bill To(excl)     Amount Status       Collected Date
+  1  2026-01-01   2026-04-10      1250.00 COLLECTED    2026-01-01  
+  (none)
+
+Month truth (as-of report run):
+  ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written)  Collected
+  01-Jan-2026 to 31-Jan-2026      391.53         858.47             858.47    1250.00
+  01-Feb-2026 to 28-Feb-2026      353.64         504.83             504.83       0.00
+  01-Mar-2026 to 31-Mar-2026      391.53         113.30             113.30       0.00
+  01-Apr-2026 to 30-Apr-2026      113.30           0.00               0.00       0.00
+
+Closed month deltas posted forward:
+  (none)
+
+Posted row for report month:
+  ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written)  Collected   Adj(Earned)  Adj(UnearnedPaid)   Adj(UnearnedWritten)            Source
+  01-Jan-2026 to 31-Jan-2026      391.53         858.47             858.47    1250.00          0.00               0.00                   0.00              BASE
+
+***********************************************************************************************
+Scenario Context
+-----------------------------------------------------------------------------------------------
+Scenario Name : annual_feb1_pol0002_billed
+Description   : POL-0002: 1-Feb-2026 to 1-Feb-2027 inclusive; single BILLED installment (not collected).
+***********************************************************************************************
+Policy Context
+-----------------------------------------------------------------------------------------------
+Policy Number : POL-0002
+Policy ID     : MOCK-ANNUAL-BILLED-001
+Coverage      : 2026-02-01 -> 2027-02-01
+Report Month  : 2026-02
+***********************************************************************************************
+
+Policy events (source timeline):
+  #  Type      Effective    End(excl)    Txn Date     Premium Delta
+  1  ISSUE     2026-02-01   2027-02-01   2026-02-01         2529.36
+
+Derived premium slices (as-of report month):
+  #  Event ID       Type      Start        End(excl)       Premium      Days  DailyRate
+  1  E-ISSUE-ANNUAL-1 ISSUE     2026-02-01   2027-02-02      2529.36       366       6.91
+                                                    Total        2529.36
+
+Installments (collection schedule):
+  #  Bill From    Bill To(excl)     Amount Status       Collected Date
+  1  2026-02-01   2027-02-02      2529.36 BILLED       —           
+  (none)
+
+Month truth (as-of report run):
+  ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written)  Collected
+  01-Feb-2026 to 28-Feb-2026        0.00           0.00            2529.36       0.00
+  01-Mar-2026 to 31-Mar-2026        0.00           0.00            2529.36       0.00
+  01-Apr-2026 to 30-Apr-2026        0.00           0.00            2529.36       0.00
+  01-May-2026 to 31-May-2026        0.00           0.00            2529.36       0.00
+  01-Jun-2026 to 30-Jun-2026        0.00           0.00            2529.36       0.00
+  01-Jul-2026 to 31-Jul-2026        0.00           0.00            2529.36       0.00
+  01-Aug-2026 to 31-Aug-2026        0.00           0.00            2529.36       0.00
+  01-Sep-2026 to 30-Sep-2026        0.00           0.00            2529.36       0.00
+  01-Oct-2026 to 31-Oct-2026        0.00           0.00            2529.36       0.00
+  01-Nov-2026 to 30-Nov-2026        0.00           0.00            2529.36       0.00
+  01-Dec-2026 to 31-Dec-2026        0.00           0.00            2529.36       0.00
+  01-Jan-2027 to 31-Jan-2027        0.00           0.00            2529.36       0.00
+  01-Feb-2027 to 28-Feb-2027        0.00           0.00            2529.36       0.00
+
+Closed month deltas posted forward:
+  (none)
+
+Posted row for report month:
+  ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written)  Collected   Adj(Earned)  Adj(UnearnedPaid)   Adj(UnearnedWritten)            Source
+  01-Feb-2026 to 28-Feb-2026        0.00           0.00            2529.36       0.00          0.00               0.00                   0.00              BASE
+
+***********************************************************************************************
+Scenario Context
+-----------------------------------------------------------------------------------------------
+Scenario Name : annual_feb1_pol0002_collected_feb
+Description   : POL-0002: 1-Feb-2026 to 1-Feb-2027 inclusive; single COLLECTED installment in Feb.
+***********************************************************************************************
+Policy Context
+-----------------------------------------------------------------------------------------------
+Policy Number : POL-0002
+Policy ID     : MOCK-ANNUAL-COL-FEB-001
+Coverage      : 2026-02-01 -> 2027-02-01
+Report Month  : 2026-02
+***********************************************************************************************
+
+Policy events (source timeline):
+  #  Type      Effective    End(excl)    Txn Date     Premium Delta
+  1  ISSUE     2026-02-01   2027-02-01   2026-02-01         2529.36
+
+Derived premium slices (as-of report month):
+  #  Event ID       Type      Start        End(excl)       Premium      Days  DailyRate
+  1  E-ISSUE-ANNUAL-1 ISSUE     2026-02-01   2027-02-02      2529.36       366       6.91
+                                                    Total        2529.36
+
+Installments (collection schedule):
+  #  Bill From    Bill To(excl)     Amount Status       Collected Date
+  1  2026-02-01   2027-02-02      2529.36 COLLECTED    2026-02-05  
+  (none)
+
+Month truth (as-of report run):
+  ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written)  Collected
+  01-Feb-2026 to 28-Feb-2026      193.48        2335.88            2335.88    2529.36
+  01-Mar-2026 to 31-Mar-2026      214.21        2121.67            2121.67       0.00
+  01-Apr-2026 to 30-Apr-2026      207.30        1914.37            1914.37       0.00
+  01-May-2026 to 31-May-2026      214.21        1700.16            1700.16       0.00
+  01-Jun-2026 to 30-Jun-2026      207.30        1492.86            1492.86       0.00
+  01-Jul-2026 to 31-Jul-2026      214.21        1278.65            1278.65       0.00
+  01-Aug-2026 to 31-Aug-2026      214.21        1064.44            1064.44       0.00
+  01-Sep-2026 to 30-Sep-2026      207.30         857.14             857.14       0.00
+  01-Oct-2026 to 31-Oct-2026      214.21         642.93             642.93       0.00
+  01-Nov-2026 to 30-Nov-2026      207.30         435.63             435.63       0.00
+  01-Dec-2026 to 31-Dec-2026      214.21         221.42             221.42       0.00
+  01-Jan-2027 to 31-Jan-2027      214.21           7.21               7.21       0.00
+  01-Feb-2027 to 28-Feb-2027        7.21           0.00               0.00       0.00
+
+Closed month deltas posted forward:
+  (none)
+
+Posted row for report month:
+  ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written)  Collected   Adj(Earned)  Adj(UnearnedPaid)   Adj(UnearnedWritten)            Source
+  01-Feb-2026 to 28-Feb-2026      193.48        2335.88            2335.88    2529.36          0.00               0.00                   0.00              BASE
+
+***********************************************************************************************
+Scenario Context
+-----------------------------------------------------------------------------------------------
+Scenario Name : annual_feb1_pol0002_collected_mar
+Description   : POL-0002: 1-Feb-2026 to 1-Feb-2027 inclusive; single COLLECTED installment in Mar.
+***********************************************************************************************
+Policy Context
+-----------------------------------------------------------------------------------------------
+Policy Number : POL-0002
+Policy ID     : MOCK-ANNUAL-COL-MAR-001
+Coverage      : 2026-02-01 -> 2027-02-01
+Report Month  : 2026-03
+***********************************************************************************************
+
+Policy events (source timeline):
+  #  Type      Effective    End(excl)    Txn Date     Premium Delta
+  1  ISSUE     2026-02-01   2027-02-01   2026-02-01         2529.36
+
+Derived premium slices (as-of report month):
+  #  Event ID       Type      Start        End(excl)       Premium      Days  DailyRate
+  1  E-ISSUE-ANNUAL-1 ISSUE     2026-02-01   2027-02-02      2529.36       366       6.91
+                                                    Total        2529.36
+
+Installments (collection schedule):
+  #  Bill From    Bill To(excl)     Amount Status       Collected Date
+  1  2026-02-01   2027-02-02      2529.36 COLLECTED    2026-02-05  
+
+Seed prior postings provided by test input:
+  ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written) Source     Run ID        
+  01-Feb-2026 to 28-Feb-2026      193.48        2335.88            2335.88 SEED       seed-history  
+
+Month truth (as-of report run):
+  ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written)  Collected
+  01-Feb-2026 to 28-Feb-2026      193.48        2335.88            2335.88    2529.36
+  01-Mar-2026 to 31-Mar-2026      214.21        2121.67            2121.67       0.00
+  01-Apr-2026 to 30-Apr-2026      207.30        1914.37            1914.37       0.00
+  01-May-2026 to 31-May-2026      214.21        1700.16            1700.16       0.00
+  01-Jun-2026 to 30-Jun-2026      207.30        1492.86            1492.86       0.00
+  01-Jul-2026 to 31-Jul-2026      214.21        1278.65            1278.65       0.00
+  01-Aug-2026 to 31-Aug-2026      214.21        1064.44            1064.44       0.00
+  01-Sep-2026 to 30-Sep-2026      207.30         857.14             857.14       0.00
+  01-Oct-2026 to 31-Oct-2026      214.21         642.93             642.93       0.00
+  01-Nov-2026 to 30-Nov-2026      207.30         435.63             435.63       0.00
+  01-Dec-2026 to 31-Dec-2026      214.21         221.42             221.42       0.00
+  01-Jan-2027 to 31-Jan-2027      214.21           7.21               7.21       0.00
+  01-Feb-2027 to 28-Feb-2027        7.21           0.00               0.00       0.00
+
+Closed month deltas posted forward:
+  (none)
+
+Posted row for report month:
+  ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written)  Collected   Adj(Earned)  Adj(UnearnedPaid)   Adj(UnearnedWritten)            Source
+  01-Mar-2026 to 31-Mar-2026      214.21        2121.67            2121.67       0.00          0.00               0.00                   0.00              BASE
+
+***********************************************************************************************
+Scenario Context
+-----------------------------------------------------------------------------------------------
+Scenario Name : annual_feb1_pol0002_mtaFeb25_collected_mar
+Description   : POL-0002: 1-Feb-2026 to 1-Feb-2027 inclusive; MTA effective 25-Feb (txn 5-Mar) with +1095.24 premium, collected in Mar.
+***********************************************************************************************
+Policy Context
+-----------------------------------------------------------------------------------------------
+Policy Number : POL-0002
+Policy ID     : MOCK-ANNUAL-FEB1-MTAFEB25-COL-MAR-001
+Coverage      : 2026-02-01 -> 2027-02-01
+Report Month  : 2026-03
+***********************************************************************************************
+
+Policy events (source timeline):
+  #  Type      Effective    End(excl)    Txn Date     Premium Delta
+  1  ISSUE     2026-02-01   2027-02-01   2026-02-01         2529.36
+  2  MTA       2026-02-25   2027-02-01   2026-03-05         1095.24
+
+Derived premium slices (as-of report month):
+  #  Event ID       Type      Start        End(excl)       Premium      Days  DailyRate
+  1  E-ISSUE-ANNUAL-1 ISSUE     2026-02-01   2027-02-02      2529.36       366       6.91
+  2  E-MTA-FEB25-1  MTA       2026-02-25   2027-02-02      1095.24       342       3.20
+                                                    Total        3624.60
+
+Installments (collection schedule):
+  #  Bill From    Bill To(excl)     Amount Status       Collected Date
+  1  2026-02-01   2027-02-02      2529.36 COLLECTED    2026-02-05  
+  2  2026-02-25   2027-02-02      1095.24 COLLECTED    2026-03-05  
+
+Seed prior postings provided by test input:
+  ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written) Source     Run ID        
+  01-Feb-2026 to 28-Feb-2026      193.48        2335.88            2335.88 SEED       seed-history  
+
+Month truth (as-of report run):
+  ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written)  Collected
+  01-Feb-2026 to 28-Feb-2026      206.28        2323.08            3418.32    2529.36
+  01-Mar-2026 to 31-Mar-2026      313.41        3104.91            3104.91    1095.24
+  01-Apr-2026 to 30-Apr-2026      303.30        2801.61            2801.61       0.00
+  01-May-2026 to 31-May-2026      313.41        2488.20            2488.20       0.00
+  01-Jun-2026 to 30-Jun-2026      303.30        2184.90            2184.90       0.00
+  01-Jul-2026 to 31-Jul-2026      313.41        1871.49            1871.49       0.00
+  01-Aug-2026 to 31-Aug-2026      313.41        1558.08            1558.08       0.00
+  01-Sep-2026 to 30-Sep-2026      303.30        1254.78            1254.78       0.00
+  01-Oct-2026 to 31-Oct-2026      313.41         941.37             941.37       0.00
+  01-Nov-2026 to 30-Nov-2026      303.30         638.07             638.07       0.00
+  01-Dec-2026 to 31-Dec-2026      313.41         324.66             324.66       0.00
+  01-Jan-2027 to 31-Jan-2027      313.41          11.25              11.25       0.00
+  01-Feb-2027 to 28-Feb-2027       11.25           0.00               0.00       0.00
+
+Closed month deltas posted forward:
+  ReportingPeriod               Earned Delta  Unearned Paid Delta   Unearned Written Delta
+  01-Feb-2026 to 28-Feb-2026           12.80               -12.80                  1082.44
+
+Posted row for report month:
+  ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written)  Collected   Adj(Earned)  Adj(UnearnedPaid)   Adj(UnearnedWritten)            Source
+  01-Mar-2026 to 31-Mar-2026      326.21        3092.11            4187.35    1095.24         12.80             -12.80                1082.44   BASE+ADJUSTMENT
+
+***********************************************************************************************
+Scenario Context
+-----------------------------------------------------------------------------------------------
+Scenario Name : monthly_feb1_regular
+Description   : Regular monthly policy: ISSUE Jan-Dec 2026 with premium 1200.00 and all monthly installments collected in respective months.
+***********************************************************************************************
+Policy Context
+-----------------------------------------------------------------------------------------------
+Policy Number : POL-MONTHLY-REG-001
+Policy ID     : MOCK-MONTHLY-FEB1-REG-001
+Coverage      : 2026-01-01 -> 2026-12-31
+Report Month  : 2026-04
+***********************************************************************************************
+
+Policy events (source timeline):
+  #  Type      Effective    End(excl)    Txn Date     Premium Delta
+  1  ISSUE     2026-01-01   2026-12-31   2026-01-01         1200.00
+
+Derived premium slices (as-of report month):
+  #  Event ID       Type      Start        End(excl)       Premium      Days  DailyRate
+  1  E-ISSUE-REG-1  ISSUE     2026-01-01   2027-01-01      1200.00       365       3.29
+                                                    Total        1200.00
+
+Installments (collection schedule):
+  #  Bill From    Bill To(excl)     Amount Status       Collected Date
+  1  2026-01-01   2026-02-01       100.00 COLLECTED    2026-01-05  
+  2  2026-02-01   2026-03-01       100.00 COLLECTED    2026-02-05  
+  3  2026-03-01   2026-04-01       100.00 COLLECTED    2026-03-05  
+  4  2026-04-01   2026-05-01       100.00 COLLECTED    2026-04-05  
+  5  2026-05-01   2026-06-01       100.00 COLLECTED    2026-05-05  
+  6  2026-06-01   2026-07-01       100.00 COLLECTED    2026-06-05  
+  7  2026-07-01   2026-08-01       100.00 COLLECTED    2026-07-05  
+  8  2026-08-01   2026-09-01       100.00 COLLECTED    2026-08-05  
+  9  2026-09-01   2026-10-01       100.00 COLLECTED    2026-09-05  
+  10 2026-10-01   2026-11-01       100.00 COLLECTED    2026-10-05  
+  11 2026-11-01   2026-12-01       100.00 COLLECTED    2026-11-05  
+  12 2026-12-01   2027-01-01       100.00 COLLECTED    2026-12-05  
+  (none)
+
+Month truth (as-of report run):
+  ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written)  Collected
+  01-Jan-2026 to 31-Jan-2026      100.00           0.00            1100.00     100.00
+  01-Feb-2026 to 28-Feb-2026       94.11           5.89            1005.89     100.00
+  01-Mar-2026 to 31-Mar-2026      101.99           3.90             903.90     100.00
+  01-Apr-2026 to 30-Apr-2026       98.70           5.20             805.20     100.00
+  01-May-2026 to 31-May-2026      101.99           3.21             703.21     100.00
+  01-Jun-2026 to 30-Jun-2026       98.70           4.51             604.51     100.00
+  01-Jul-2026 to 31-Jul-2026      101.99           2.52             502.52     100.00
+  01-Aug-2026 to 31-Aug-2026      101.99           0.53             400.53     100.00
+  01-Sep-2026 to 30-Sep-2026       98.70           1.83             301.83     100.00
+  01-Oct-2026 to 31-Oct-2026      101.83           0.00             200.00     100.00
+  01-Nov-2026 to 30-Nov-2026       98.86           1.14             101.14     100.00
+  01-Dec-2026 to 31-Dec-2026      101.14           0.00               0.00     100.00
+
+Closed month deltas posted forward:
+  (none)
+
+Posted row for report month:
+  ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written)  Collected   Adj(Earned)  Adj(UnearnedPaid)   Adj(UnearnedWritten)            Source
+  01-Apr-2026 to 30-Apr-2026       98.70           5.20             805.20     100.00          0.00               0.00                   0.00              BASE
+
+***********************************************************************************************
+Scenario Context
+-----------------------------------------------------------------------------------------------
+Scenario Name : backdated_mta_increase
+Description   : Backdated premium increase posted in April. Jan-Feb-Mar were already posted and immutable.
+***********************************************************************************************
+Policy Context
+-----------------------------------------------------------------------------------------------
+Policy Number : POL-BACK-INC-001
+Policy ID     : P-BACK-INC-001
+Coverage      : 2026-01-01 -> 2026-12-31
+Report Month  : 2026-04
+***********************************************************************************************
+
+Policy events (source timeline):
+  #  Type      Effective    End(excl)    Txn Date     Premium Delta
+  1  ISSUE     2026-01-01   2026-12-31   2026-01-01         1200.00
+  2  MTA       2026-02-01   2026-12-31   2026-04-10          600.00
+
+Derived premium slices (as-of report month):
+  #  Event ID       Type      Start        End(excl)       Premium      Days  DailyRate
+  1  E-ISSUE-1      ISSUE     2026-01-01   2027-01-01      1200.00       365       3.29
+  2  E-MTA-BACK-1   MTA       2026-02-01   2027-01-01       600.00       334       1.80
+                                                    Total        1800.00
+
+Installments (collection schedule):
+  #  Bill From    Bill To(excl)     Amount Status       Collected Date
+  1  2026-01-01   2026-02-01       100.00 COLLECTED    2026-01-05  
+  2  2026-02-01   2026-03-01       100.00 COLLECTED    2026-02-05  
+  3  2026-03-01   2026-04-01       100.00 COLLECTED    2026-03-05  
+  4  2026-04-01   2026-05-01       300.00 COLLECTED    2026-04-05  
+  5  2026-05-01   2026-06-01       150.00 COLLECTED    2026-05-05  
+  6  2026-06-01   2026-07-01       150.00 COLLECTED    2026-06-05  
+  7  2026-07-01   2026-08-01       150.00 COLLECTED    2026-07-05  
+  8  2026-08-01   2026-09-01       150.00 COLLECTED    2026-08-05  
+  9  2026-09-01   2026-10-01       150.00 COLLECTED    2026-09-05  
+  10 2026-10-01   2026-11-01       150.00 COLLECTED    2026-10-05  
+  11 2026-11-01   2026-12-01       150.00 COLLECTED    2026-11-05  
+  12 2026-12-01   2027-01-01       150.00 COLLECTED    2026-12-05  
+
+Seed prior postings provided by test input:
+  ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written) Source     Run ID        
+  01-Jan-2026 to 31-Jan-2026      100.00           0.00            1100.00 SEED       seed-history  
+  01-Feb-2026 to 28-Feb-2026       94.11           5.89            1005.89 SEED       seed-history  
+  01-Mar-2026 to 31-Mar-2026      101.99           3.90             903.90 SEED       seed-history  
+
+Month truth (as-of report run):
+  ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written)  Collected
+  01-Jan-2026 to 31-Jan-2026      100.00           0.00            1100.00     100.00
+  01-Feb-2026 to 28-Feb-2026      100.00           0.00            1600.00     100.00
+  01-Mar-2026 to 31-Mar-2026      100.00           0.00            1500.00     100.00
+  01-Apr-2026 to 30-Apr-2026      255.00          45.00            1245.00     300.00
+  01-May-2026 to 31-May-2026      157.79          37.21            1087.21     150.00
+  01-Jun-2026 to 30-Jun-2026      152.70          34.51             934.51     150.00
+  01-Jul-2026 to 31-Jul-2026      157.79          26.72             776.72     150.00
+  01-Aug-2026 to 31-Aug-2026      157.79          18.93             618.93     150.00
+  01-Sep-2026 to 30-Sep-2026      152.70          16.23             466.23     150.00
+  01-Oct-2026 to 31-Oct-2026      157.79           8.44             308.44     150.00
+  01-Nov-2026 to 30-Nov-2026      152.70           5.74             155.74     150.00
+  01-Dec-2026 to 31-Dec-2026      155.74           0.00               0.00     150.00
+
+Closed month deltas posted forward:
+  ReportingPeriod               Earned Delta  Unearned Paid Delta   Unearned Written Delta
+  01-Feb-2026 to 28-Feb-2026            5.89                -5.89                   594.11
+  01-Mar-2026 to 31-Mar-2026           -1.99                -3.90                   596.10
+
+Posted row for report month:
+  ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written)  Collected   Adj(Earned)  Adj(UnearnedPaid)   Adj(UnearnedWritten)            Source
+  01-Apr-2026 to 30-Apr-2026      258.90          35.21            2435.21     300.00          3.90              -9.79                1190.21   BASE+ADJUSTMENT
+
+***********************************************************************************************
+Scenario Context
+-----------------------------------------------------------------------------------------------
+Scenario Name : backdated_cancellation_refund
+Description   : Cancellation effective Feb-15 recorded in April. Closed months remain immutable; delta posts in April.
+***********************************************************************************************
+Policy Context
+-----------------------------------------------------------------------------------------------
+Policy Number : POL-BACK-CAN-001
+Policy ID     : P-BACK-CAN-001
+Coverage      : 2026-01-01 -> 2026-12-31
+Report Month  : 2026-04
+***********************************************************************************************
+
+Policy events (source timeline):
+  #  Type      Effective    End(excl)    Txn Date     Premium Delta
+  1  ISSUE     2026-01-01   2026-12-31   2026-01-01         1200.00
+  2  CANCEL    2026-02-15   2026-12-31   2026-04-02         -700.00
+
+Derived premium slices (as-of report month):
+  #  Event ID       Type      Start        End(excl)       Premium      Days  DailyRate
+  1  E-ISSUE-1      ISSUE     2026-01-01   2027-01-01      1200.00       365       3.29
+  2  E-CANCEL-1     CANCEL    2026-02-15   2027-01-01      -700.00       320      -2.19
+                                                    Total         500.00
+
+Installments (collection schedule):
+  #  Bill From    Bill To(excl)     Amount Status       Collected Date
+  1  2026-01-01   2026-02-01       100.00 COLLECTED    2026-01-05  
+  2  2026-02-01   2026-03-01       100.00 COLLECTED    2026-02-05  
+
+Seed prior postings provided by test input:
+  ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written) Source     Run ID        
+  01-Jan-2026 to 31-Jan-2026      100.00           0.00            1100.00 SEED       seed-history  
+  01-Feb-2026 to 28-Feb-2026       94.11           5.89            1005.89 SEED       seed-history  
+  01-Mar-2026 to 31-Mar-2026      101.99           3.90             903.90 SEED       seed-history  
+
+Month truth (as-of report run):
+  ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written)  Collected
+  01-Jan-2026 to 31-Jan-2026      100.00           0.00            1100.00     100.00
+  01-Feb-2026 to 28-Feb-2026       63.45          36.55             336.55     100.00
+  01-Mar-2026 to 31-Mar-2026       34.10           2.45             302.45       0.00
+  01-Apr-2026 to 30-Apr-2026        2.45           0.00             300.00       0.00
+  01-May-2026 to 31-May-2026        0.00           0.00             300.00       0.00
+  01-Jun-2026 to 30-Jun-2026        0.00           0.00             300.00       0.00
+  01-Jul-2026 to 31-Jul-2026        0.00           0.00             300.00       0.00
+  01-Aug-2026 to 31-Aug-2026        0.00           0.00             300.00       0.00
+  01-Sep-2026 to 30-Sep-2026        0.00           0.00             300.00       0.00
+  01-Oct-2026 to 31-Oct-2026        0.00           0.00             300.00       0.00
+  01-Nov-2026 to 30-Nov-2026        0.00           0.00             300.00       0.00
+  01-Dec-2026 to 31-Dec-2026        0.00           0.00             300.00       0.00
+
+Closed month deltas posted forward:
+  ReportingPeriod               Earned Delta  Unearned Paid Delta   Unearned Written Delta
+  01-Feb-2026 to 28-Feb-2026          -30.66                30.66                  -669.34
+  01-Mar-2026 to 31-Mar-2026          -67.89                -1.45                  -601.45
+
+Posted row for report month:
+  ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written)  Collected   Adj(Earned)  Adj(UnearnedPaid)   Adj(UnearnedWritten)            Source
+  01-Apr-2026 to 30-Apr-2026      -96.10          29.21            -970.79       0.00        -98.55              29.21               -1270.79   BASE+ADJUSTMENT
+
+***********************************************************************************************
+Scenario Context
+-----------------------------------------------------------------------------------------------
+Scenario Name : future_mta_increase_no_adjustment
+Description   : Future-dated MTA from July should not trigger closed month adjustments in April run.
+***********************************************************************************************
+Policy Context
+-----------------------------------------------------------------------------------------------
+Policy Number : POL-FUT-MTA-001
+Policy ID     : P-FUT-MTA-001
+Coverage      : 2026-01-01 -> 2026-12-31
+Report Month  : 2026-04
+***********************************************************************************************
+
+Policy events (source timeline):
+  #  Type      Effective    End(excl)    Txn Date     Premium Delta
+  1  ISSUE     2026-01-01   2026-12-31   2026-01-01         1200.00
+  2  MTA       2026-07-01   2026-12-31   2026-04-10          600.00
+
+Derived premium slices (as-of report month):
+  #  Event ID       Type      Start        End(excl)       Premium      Days  DailyRate
+  1  E-ISSUE-1      ISSUE     2026-01-01   2027-01-01      1200.00       365       3.29
+  2  E-MTA-FWD-1    MTA       2026-07-01   2027-01-01       600.00       184       3.26
+                                                    Total        1800.00
+
+Installments (collection schedule):
+  #  Bill From    Bill To(excl)     Amount Status       Collected Date
+  1  2026-01-01   2026-02-01       100.00 COLLECTED    2026-01-05  
+  2  2026-02-01   2026-03-01       100.00 COLLECTED    2026-02-05  
+  3  2026-03-01   2026-04-01       100.00 COLLECTED    2026-03-05  
+  4  2026-04-01   2026-05-01       100.00 COLLECTED    2026-04-05  
+
+Seed prior postings provided by test input:
+  ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written) Source     Run ID        
+  01-Jan-2026 to 31-Jan-2026      100.00           0.00            1100.00 SEED       seed-history  
+  01-Feb-2026 to 28-Feb-2026       94.11           5.89            1005.89 SEED       seed-history  
+  01-Mar-2026 to 31-Mar-2026      101.99           3.90             903.90 SEED       seed-history  
+
+Month truth (as-of report run):
+  ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written)  Collected
+  01-Jan-2026 to 31-Jan-2026      100.00           0.00            1100.00     100.00
+  01-Feb-2026 to 28-Feb-2026       94.11           5.89            1005.89     100.00
+  01-Mar-2026 to 31-Mar-2026      101.99           3.90             903.90     100.00
+  01-Apr-2026 to 30-Apr-2026       98.70           5.20             805.20     100.00
+  01-May-2026 to 31-May-2026        5.20           0.00             800.00       0.00
+  01-Jun-2026 to 30-Jun-2026        0.00           0.00             800.00       0.00
+  01-Jul-2026 to 31-Jul-2026        0.00           0.00            1400.00       0.00
+  01-Aug-2026 to 31-Aug-2026        0.00           0.00            1400.00       0.00
+  01-Sep-2026 to 30-Sep-2026        0.00           0.00            1400.00       0.00
+  01-Oct-2026 to 31-Oct-2026        0.00           0.00            1400.00       0.00
+  01-Nov-2026 to 30-Nov-2026        0.00           0.00            1400.00       0.00
+  01-Dec-2026 to 31-Dec-2026        0.00           0.00            1400.00       0.00
+
+Closed month deltas posted forward:
+  (none)
+
+Posted row for report month:
+  ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written)  Collected   Adj(Earned)  Adj(UnearnedPaid)   Adj(UnearnedWritten)            Source
+  01-Apr-2026 to 30-Apr-2026       98.70           5.20             805.20     100.00          0.00               0.00                   0.00              BASE
+
