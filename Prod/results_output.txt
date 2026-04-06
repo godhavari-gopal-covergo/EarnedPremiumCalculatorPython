@@ -26,6 +26,7 @@ Installments (collection schedule):
   1  2026-01-01   2026-02-01       550.00 COLLECTED    2026-01-01  
   2  2026-02-01   2026-03-01       350.00 COLLECTED    2026-02-01  
   3  2026-03-01   2026-04-01       350.00 COLLECTED    2026-03-01  
+                  Total           1250.00                          
   (none)
 
 Month truth (as-of report run):
@@ -34,6 +35,7 @@ Month truth (as-of report run):
   01-Feb-2026 to 28-Feb-2026      353.64         154.83             504.83     350.00
   01-Mar-2026 to 31-Mar-2026      391.53         113.30             113.30     350.00
   01-Apr-2026 to 30-Apr-2026      113.30           0.00               0.00       0.00
+  Total                          1250.00                                      1250.00
 
 Closed month deltas posted forward:
   (none)
@@ -68,6 +70,7 @@ Derived premium slices (as-of report month):
 Installments (collection schedule):
   #  Bill From    Bill To(excl)     Amount Status       Collected Date
   1  2026-01-01   2026-04-10      1250.00 COLLECTED    2026-01-01  
+                  Total           1250.00                          
   (none)
 
 Month truth (as-of report run):
@@ -76,6 +79,7 @@ Month truth (as-of report run):
   01-Feb-2026 to 28-Feb-2026      353.64         504.83             504.83       0.00
   01-Mar-2026 to 31-Mar-2026      391.53         113.30             113.30       0.00
   01-Apr-2026 to 30-Apr-2026      113.30           0.00               0.00       0.00
+  Total                          1250.00                                      1250.00
 
 Closed month deltas posted forward:
   (none)
@@ -110,6 +114,7 @@ Derived premium slices (as-of report month):
 Installments (collection schedule):
   #  Bill From    Bill To(excl)     Amount Status       Collected Date
   1  2026-02-01   2027-02-02      2529.36 BILLED       —           
+                  Total           2529.36                          
   (none)
 
 Month truth (as-of report run):
@@ -127,6 +132,7 @@ Month truth (as-of report run):
   01-Dec-2026 to 31-Dec-2026        0.00           0.00            2529.36       0.00
   01-Jan-2027 to 31-Jan-2027        0.00           0.00            2529.36       0.00
   01-Feb-2027 to 28-Feb-2027        0.00           0.00            2529.36       0.00
+  Total                             0.00                                         0.00
 
 Closed month deltas posted forward:
   (none)
@@ -161,6 +167,7 @@ Derived premium slices (as-of report month):
 Installments (collection schedule):
   #  Bill From    Bill To(excl)     Amount Status       Collected Date
   1  2026-02-01   2027-02-02      2529.36 COLLECTED    2026-02-05  
+                  Total           2529.36                          
   (none)
 
 Month truth (as-of report run):
@@ -178,6 +185,7 @@ Month truth (as-of report run):
   01-Dec-2026 to 31-Dec-2026      214.21         221.42             221.42       0.00
   01-Jan-2027 to 31-Jan-2027      214.21           7.21               7.21       0.00
   01-Feb-2027 to 28-Feb-2027        7.21           0.00               0.00       0.00
+  Total                          2529.36                                      2529.36
 
 Closed month deltas posted forward:
   (none)
@@ -212,10 +220,12 @@ Derived premium slices (as-of report month):
 Installments (collection schedule):
   #  Bill From    Bill To(excl)     Amount Status       Collected Date
   1  2026-02-01   2027-02-02      2529.36 COLLECTED    2026-02-05  
+                  Total           2529.36                          
 
-Seed prior postings provided by test input:
+Prior postings (from database)
   ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written) Source     Run ID        
   01-Feb-2026 to 28-Feb-2026      193.48        2335.88            2335.88 SEED       seed-history  
+  Total                           193.48                                                            
 
 Month truth (as-of report run):
   ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written)  Collected
@@ -232,6 +242,7 @@ Month truth (as-of report run):
   01-Dec-2026 to 31-Dec-2026      214.21         221.42             221.42       0.00
   01-Jan-2027 to 31-Jan-2027      214.21           7.21               7.21       0.00
   01-Feb-2027 to 28-Feb-2027        7.21           0.00               0.00       0.00
+  Total                          2529.36                                      2529.36
 
 Closed month deltas posted forward:
   (none)
@@ -269,10 +280,12 @@ Installments (collection schedule):
   #  Bill From    Bill To(excl)     Amount Status       Collected Date
   1  2026-02-01   2027-02-02      2529.36 COLLECTED    2026-02-05  
   2  2026-02-25   2027-02-02      1095.24 COLLECTED    2026-03-05  
+                  Total           3624.60                          
 
-Seed prior postings provided by test input:
+Prior postings (from database)
   ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written) Source     Run ID        
   01-Feb-2026 to 28-Feb-2026      193.48        2335.88            2335.88 SEED       seed-history  
+  Total                           193.48                                                            
 
 Month truth (as-of report run):
   ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written)  Collected
@@ -289,6 +302,7 @@ Month truth (as-of report run):
   01-Dec-2026 to 31-Dec-2026      313.41         324.66             324.66       0.00
   01-Jan-2027 to 31-Jan-2027      313.41          11.25              11.25       0.00
   01-Feb-2027 to 28-Feb-2027       11.25           0.00               0.00       0.00
+  Total                          3624.60                                      3624.60
 
 Closed month deltas posted forward:
   ReportingPeriod               Earned Delta  Unearned Paid Delta   Unearned Written Delta
@@ -335,6 +349,7 @@ Installments (collection schedule):
   10 2026-10-01   2026-11-01       100.00 COLLECTED    2026-10-05  
   11 2026-11-01   2026-12-01       100.00 COLLECTED    2026-11-05  
   12 2026-12-01   2027-01-01       100.00 COLLECTED    2026-12-05  
+                  Total           1200.00                          
   (none)
 
 Month truth (as-of report run):
@@ -351,6 +366,7 @@ Month truth (as-of report run):
   01-Oct-2026 to 31-Oct-2026      101.83           0.00             200.00     100.00
   01-Nov-2026 to 30-Nov-2026       98.86           1.14             101.14     100.00
   01-Dec-2026 to 31-Dec-2026      101.14           0.00               0.00     100.00
+  Total                          1200.00                                      1200.00
 
 Closed month deltas posted forward:
   (none)
@@ -398,12 +414,14 @@ Installments (collection schedule):
   10 2026-10-01   2026-11-01       150.00 COLLECTED    2026-10-05  
   11 2026-11-01   2026-12-01       150.00 COLLECTED    2026-11-05  
   12 2026-12-01   2027-01-01       150.00 COLLECTED    2026-12-05  
+                  Total           1800.00                          
 
-Seed prior postings provided by test input:
+Prior postings (from database)
   ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written) Source     Run ID        
   01-Jan-2026 to 31-Jan-2026      100.00           0.00            1100.00 SEED       seed-history  
   01-Feb-2026 to 28-Feb-2026       94.11           5.89            1005.89 SEED       seed-history  
   01-Mar-2026 to 31-Mar-2026      101.99           3.90             903.90 SEED       seed-history  
+  Total                           296.10                                                            
 
 Month truth (as-of report run):
   ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written)  Collected
@@ -419,6 +437,7 @@ Month truth (as-of report run):
   01-Oct-2026 to 31-Oct-2026      157.79           8.44             308.44     150.00
   01-Nov-2026 to 30-Nov-2026      152.70           5.74             155.74     150.00
   01-Dec-2026 to 31-Dec-2026      155.74           0.00               0.00     150.00
+  Total                          1800.00                                      1800.00
 
 Closed month deltas posted forward:
   ReportingPeriod               Earned Delta  Unearned Paid Delta   Unearned Written Delta
@@ -458,12 +477,14 @@ Installments (collection schedule):
   #  Bill From    Bill To(excl)     Amount Status       Collected Date
   1  2026-01-01   2026-02-01       100.00 COLLECTED    2026-01-05  
   2  2026-02-01   2026-03-01       100.00 COLLECTED    2026-02-05  
+                  Total            200.00                          
 
-Seed prior postings provided by test input:
+Prior postings (from database)
   ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written) Source     Run ID        
   01-Jan-2026 to 31-Jan-2026      100.00           0.00            1100.00 SEED       seed-history  
   01-Feb-2026 to 28-Feb-2026       94.11           5.89            1005.89 SEED       seed-history  
   01-Mar-2026 to 31-Mar-2026      101.99           3.90             903.90 SEED       seed-history  
+  Total                           296.10                                                            
 
 Month truth (as-of report run):
   ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written)  Collected
@@ -479,6 +500,7 @@ Month truth (as-of report run):
   01-Oct-2026 to 31-Oct-2026        0.00           0.00             300.00       0.00
   01-Nov-2026 to 30-Nov-2026        0.00           0.00             300.00       0.00
   01-Dec-2026 to 31-Dec-2026        0.00           0.00             300.00       0.00
+  Total                           200.00                                       200.00
 
 Closed month deltas posted forward:
   ReportingPeriod               Earned Delta  Unearned Paid Delta   Unearned Written Delta
@@ -520,12 +542,14 @@ Installments (collection schedule):
   2  2026-02-01   2026-03-01       100.00 COLLECTED    2026-02-05  
   3  2026-03-01   2026-04-01       100.00 COLLECTED    2026-03-05  
   4  2026-04-01   2026-05-01       100.00 COLLECTED    2026-04-05  
+                  Total            400.00                          
 
-Seed prior postings provided by test input:
+Prior postings (from database)
   ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written) Source     Run ID        
   01-Jan-2026 to 31-Jan-2026      100.00           0.00            1100.00 SEED       seed-history  
   01-Feb-2026 to 28-Feb-2026       94.11           5.89            1005.89 SEED       seed-history  
   01-Mar-2026 to 31-Mar-2026      101.99           3.90             903.90 SEED       seed-history  
+  Total                           296.10                                                            
 
 Month truth (as-of report run):
   ReportingPeriod                 Earned Unearned(Paid)  Unearned(Written)  Collected
@@ -541,6 +565,7 @@ Month truth (as-of report run):
   01-Oct-2026 to 31-Oct-2026        0.00           0.00            1400.00       0.00
   01-Nov-2026 to 30-Nov-2026        0.00           0.00            1400.00       0.00
   01-Dec-2026 to 31-Dec-2026        0.00           0.00            1400.00       0.00
+  Total                           400.00                                       400.00
 
 Closed month deltas posted forward:
   (none)

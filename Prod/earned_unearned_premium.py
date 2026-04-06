@@ -194,27 +194,39 @@ def build_policy_report_lines(
         f"  {'#':<2} {'Bill From':<12} {'Bill To(excl)':<12} {'Amount':>10} {'Status':<12} {'Collected Date':<12}"
     )
     if policy.installments:
+        installment_total = ZERO
         for idx, inst in enumerate(sorted(policy.installments, key=lambda i: i.bill_from), 1):
             collected = str(inst.collected_date) if inst.collected_date else "—"
+            installment_total = q2(installment_total + inst.amount)
             lines.append(
                 f"  {idx:<2} {str(inst.bill_from):<12} {str(inst.bill_to_exclusive):<12} "
                 f"{_fmt_money(inst.amount):>10} "
                 f"{inst.status.value:<12} {collected:<12}"
             )
+        lines.append(
+            f"  {'':<2} {'':<12} {'Total':<12} {_fmt_money(installment_total):>10} "
+            f"{'':<12} {'':<12}"
+        )
     else:
         lines.append("  (none)")
 
     if run_input.prior_postings:
         lines.append("")
-        lines.append("Seed prior postings provided by test input:")
+        lines.append("Prior postings (from database)")
         lines.append(
             f"  {'ReportingPeriod':<27} {'Earned':>10} {'Unearned(Paid)':>14} {'Unearned(Written)':>18} {'Source':<10} {'Run ID':<14}"
         )
+        prior_total_earned = ZERO
         for p in sorted(run_input.prior_postings, key=lambda x: (x.reportingperiod_start, x.created_at)):
+            prior_total_earned = q2(prior_total_earned + p.earned)
             lines.append(
             f"  {_reporting_period_label(p.reportingperiod_start):<27} {_fmt_money(p.earned):>10} {_fmt_money(p.unearned_paid_basis):>14} {_fmt_money(p.unearned_written_basis):>18} "
                 f"{p.source:<10} {p.run_id:<14}"
             )
+        lines.append(
+            f"  {'Total':<27} {_fmt_money(prior_total_earned):>10} {'':>14} {'':>18} "
+            f"{'':<10} {'':<14}"
+        )
     else:
         lines.append("  (none)")
 
@@ -223,11 +235,18 @@ def build_policy_report_lines(
     lines.append(
         f"  {'ReportingPeriod':<27} {'Earned':>10} {'Unearned(Paid)':>14} {'Unearned(Written)':>18} {'Collected':>10}"
     )
+    month_total_earned = ZERO
+    month_total_collected = ZERO
     for month in sorted(truth.keys()):
         row = truth[month]
+        month_total_earned = q2(month_total_earned + row.earned)
+        month_total_collected = q2(month_total_collected + row.collected_amount)
         lines.append(
             f"  {_reporting_period_label(month):<27} {_fmt_money(row.earned):>10} {_fmt_money(row.unearned_paid_basis):>14} {_fmt_money(row.unearned_written_basis):>18} {_fmt_money(row.collected_amount):>10}"
         )
+    lines.append(
+        f"  {'Total':<27} {_fmt_money(month_total_earned):>10} {'':>14} {'':>18} {_fmt_money(month_total_collected):>10}"
+    )
 
     lines.append("")
     lines.append("Closed month deltas posted forward:")
